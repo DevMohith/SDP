@@ -10,10 +10,10 @@ app.use(express.json());
 
 // PostgreSQL connection setup
 const pool = new Pool({
-  user: 'sdp',
+  user: 'postgres',
   host: 'localhost',
-  database: 'sdp',
-  password: 'sdp',
+  database: 'libraryNeub',
+  password: 'root',
   port: 5432,
 });
 
@@ -66,20 +66,20 @@ app.post('/add_book', async (req, res) => {
 });
 
 // Endpoint to delete a book by ID
-app.delete('/delete_book/:id', async (req, res) => {
-  const { id } = req.params;
-  try {
-    const result = await queryDatabase('DELETE FROM books WHERE id = $1 RETURNING *', [id]);
-    if (result.length === 0) {
-      res.status(404).send('Book not found');
-    } else {
-      res.send(result[0]);
-    }
-  } catch (error) {
-    console.error('Error executing query', error.stack);
-    res.status(500).send('Error executing query');
-  }
-});
+// app.delete('/delete_book/:id', async (req, res) => {
+//   const { id } = req.params;
+//   try {
+//     const result = await queryDatabase('DELETE FROM books WHERE id = $1 RETURNING *', [id]);
+//     if (result.length === 0) {
+//       res.status(404).send('Book not found');
+//     } else {
+//       res.send(result[0]);
+//     }
+//   } catch (error) {
+//     console.error('Error executing query', error.stack);
+//     res.status(500).send('Error executing query');
+//   }
+// });
 
 // Endpoint to get all books from PostgreSQL
 app.get('/get_books', async (req, res) => {
@@ -90,7 +90,7 @@ app.get('/get_books', async (req, res) => {
 
   try {
     //query the database to get all books
-    const result = await queryDatabase('SELECT * FROM books', []);
+    const result = await queryDatabase('SELECT * FROM Books', []);
     t.data = result;
   } catch (error) {
     console.error('Error executing query', error.stack);
@@ -102,8 +102,62 @@ app.get('/get_books', async (req, res) => {
   res.json(t);
 });
 
-// Start the server
-app.listen(port, () => {
-  console.log(`Express appp listening at http://localhost:${port}`);
+
+// Endpoint to get all books from PostgreSQL
+app.post('/updateBooks/:id', async (req, res) => {
+  
+  const { id} = req.params;
+  //const id=req.params.id;
+
+  //get the data from the req
+  const data = req.body;
+  var title=data.title;
+  //create a variable to store the result
+  var t = {};
+
+console.log(`This ednpoint will update book with id ${id} and set its title to ${title}`);
+
+  //try {
+    //query the database to get all books
+    //const result = await queryDatabase('UPDATE Books set title=$1 where id=$2', [title,id]);
+    //t.data = result;
+  //} catch (error) {
+   // console.error('Error executing query', error.stack);
+   // res.status(500).send('Error executing query');
+   // return;
+  //}
+
+  //send back whatever is in t
+  res.json(t);
 });
 
+// Start the server
+app.listen(port, () => {
+   console.log(`Express appp listening at http://localhost:${port}`);
+});
+
+
+
+
+
+//getBooks -> get ID, Author, Title, Year, Publisher
+//getBooks/:id -> select * from books where bookid=id;
+
+
+
+
+//access table -> userid,bookid,timestamp,extension(true,false)
+///user/getBooks -> selects from the access table all the books the user has taken access
+//select * from access_table where userid=our_user;
+
+///app.get(/user/booksCount) -> select count (*) from access_Table where userid=our_user;
+
+//DONT app.post('/books') add description updateBooks, Add books etc
+//addUserBooks -> add another book the access table for a specific user (userid,bookid)
+//app.delete(/user/books/:id) -> remove an entry because the book has been returned from
+
+//extendUserBooks -> set extension to true so that the calculation to see if its late gives double the time -> Today()>=timestamp+2 weeks times the flag
+
+//var t = new Date();
+//var text_time=t.toISOString();
+//console.log(text_time)
