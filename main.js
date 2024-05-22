@@ -115,7 +115,39 @@ app.post('/updateBooks/:id', async (req, res) => {
   //create a variable to store the result
   var t = {};
 
-console.log(`This ednpoint will update book with id ${id} and set its title to ${title}`);
+console.log(`This ednpoint will update book with id ${id} and set its title to ${title}`); 
+res.json(t);
+});
+
+/* Neubins Workspace*/
+
+
+// endpoint to get particular book
+app.get('/get_books/:id', async(req, res) => {
+  const {id} = req.params;
+  const bookId = parseInt(id, 10)
+  if (isNaN(bookId)) {
+    return res.status(400).json({ message: 'Invalid book ID' });
+  }
+  var book = {};
+  try {
+    //query the database to get particular book
+    const result = await queryDatabase('SELECT book_name,author_name FROM Books WHERE id=$1', [bookId]);
+    if (result.length === 0) {
+      return res.status(404).json({ message: 'Book not found' });
+    }
+    book.data = result;
+  } catch (error) {
+    console.error('Error executing query', error.stack);
+    res.status(500).send('Error executing query');
+    return;
+  }
+  res.status(200).json(book);
+})
+
+
+
+
 
   //try {
     //query the database to get all books
@@ -128,8 +160,7 @@ console.log(`This ednpoint will update book with id ${id} and set its title to $
   //}
 
   //send back whatever is in t
-  res.json(t);
-});
+ 
 
 // Start the server
 app.listen(port, () => {
