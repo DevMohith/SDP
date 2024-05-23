@@ -81,20 +81,20 @@ app.post("/add_book", async (req, res) => {
 //   }
 // });
 
+/////Mohith's Workspace/////
+
 // Endpoint to get all books from PostgreSQL
-app.get("/get_books", async (req, res) => {
-  //get the data from the req
+app.get('/get_books', async (req, res) => {
   const data = req.body;
-  //create a variable to store the result
   var t = {};
 
   try {
     //query the database to get all books
-    const result = await queryDatabase("SELECT * FROM Books", []);
+    const result = await queryDatabase('SELECT * FROM books', []);
     t.data = result;
   } catch (error) {
-    console.error("Error executing query", error.stack);
-    res.status(500).send("Error executing query");
+    console.error('Error executing query', error.stack);
+    res.status(500).send('Error executing query');
     return;
   }
 
@@ -102,7 +102,7 @@ app.get("/get_books", async (req, res) => {
   res.json(t);
 });
 
-// Endpoint to get all books from PostgreSQL
+// Endpoint to post books from PostgreSQL
 app.post("/updateBooks/:id", async (req, res) => {
   const { id } = req.params;
   //const id=req.params.id;
