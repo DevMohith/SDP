@@ -102,28 +102,13 @@ app.get('/get_books', async (req, res) => {
   res.json(t);
 });
 
-// Endpoint to post books from PostgreSQL
-app.post("/updateBooks/:id", async (req, res) => {
-  const { id } = req.params;
-  //const id=req.params.id;
-
-  //get the data from the req
-  const data = req.body;
-  var title = data.title;
-  //create a variable to store the result
-  var t = {};
-
-  console.log(
-    `This ednpoint will update book with id ${id} and set its title to ${title}`
-  );
-  res.json(t);
-});
+/**********************************************************************************************************************************/
 
 /* Neubins Workspace*/
 
 // endpoint to get particular book
 
-app.get("/get_books/:id", async (req, res) => {
+app.get("/get_books/:id", async (req, res) => { 
   const { id } = req.params;
   const bookId = parseInt(id, 10);
   if (isNaN(bookId)) {
@@ -141,8 +126,8 @@ app.get("/get_books/:id", async (req, res) => {
     }
     book.data = result;
   } catch (error) {
-    console.error("Error executing query", error.stack);
-    res.status(500).send("Error executing query");
+    console.error("Error executing query to get particular book", error.stack);
+    res.status(500).send("Error executing query to get particular book");
     return;
   }
   res.status(200).json(book);
@@ -153,7 +138,7 @@ app.get("/get_books/:id", async (req, res) => {
 app.post("/adminControl/addBook", async (req, res) => {
   const { book_name, author_name, genre, description, published_year } =
     req.body;
-  // vaidating input
+  // validating input
   if (!book_name || !author_name || !genre || !description || !published_year) {
     return res
       .status(400)
@@ -171,13 +156,40 @@ app.post("/adminControl/addBook", async (req, res) => {
     );
     book.data = result;
   } catch (error) {
-    console.error("Error executing query", error.stack);
-    res.status(500).send("Error executing query");
+    console.error("Error executing query to add book", error.stack);
+    res.status(500).send("Error executing query to add book");
     return;
   }
   res.status(200).json(book);
   //res.status(201).json({ message: 'Book added successfully', book: result[0] });
 });
+
+//endpoint to update bookdetails with id for admin.
+
+app.post('/adminControl/updateBook/:id', async (req, res) => {
+  const { id } = req.params;
+  const bookId = parseInt(id, 10);
+  const { book_name, author_name, genre, description, published_year } = req.body;
+  if (!book_name || !author_name || !genre || !description || !published_year) {
+    return res.status(400).json({ message: 'All fields are required' });
+  }
+  var updatedBook = {};
+  try {
+    const result = await queryDatabase(
+      'UPDATE Books SET book_name=$1, author_name=$2, genre=$3, description=$4, published_date=$5 WHERE id=$6 RETURNING *',
+      [book_name, author_name, genre, description, published_year, bookId]
+    );
+    if (result.length === 0) return res.status(404).json({ message: 'Book not found' });
+    updatedBook.data = result;
+  } catch (error) {
+    console.error('Error executing query to update book', error.stack);
+    res.status(500).json({ message: 'Error executing query to update book' });
+    return;
+  }
+  res.status(200).json(updatedBook);
+});
+
+/**********************************************************************************************************************************/
 
 //try {
 //query the database to get all books
