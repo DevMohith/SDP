@@ -12,7 +12,7 @@ app.use(express.json());
 const pool = new Pool({
   user: "postgres",
   host: "localhost",
-  database: "NatrajDB",
+  database: "libraryNeub",
   password: "root",
   port: 5432,
 });
@@ -80,8 +80,6 @@ app.post("/add_book", async (req, res) => {
 //     res.status(500).send('Error executing query');
 //   }
 // });
-
-/*****************************************************************************************************************/
 
 /////Mohith's Workspace/////
 
@@ -191,11 +189,14 @@ app.post('/adminControl/updateBook/:id', async (req, res) => {
   res.status(200).json(updatedBook);
 });
 
+//endpoint for borrow book for users.
+//endpoint for return borrowed book with finecheck and fine details.
+
 /**********************************************************************************************************************************/
 
-//Arvind workspace/////////////////
+/*Arvinds workspace */
 
-// Route to get user by ID
+//endpoint to get all users details
 
 app.get('/adminControl/users', async (req, res) => {
   var users = {};
@@ -237,11 +238,7 @@ app.get('/adminControl/user/:id', async (req, res) => {
   res.status(200).json(user);
 });
 
-
-
-
-
-/***********************************************************************************************************************/
+/************************************************************************************************************************************* */
 
 //try {
 //query the database to get all books
@@ -257,7 +254,7 @@ app.get('/adminControl/user/:id', async (req, res) => {
 
 // Start the server
 app.listen(port, () => {
-  console.log(`Express app listening at http://localhost:${port}`);
+  console.log(`Express appp listening at http://localhost:${port}`);
 });
 
 //getBooks -> get ID, Author, Title, Year, Publisher
