@@ -12,7 +12,7 @@ app.use(express.json());
 const pool = new Pool({
   user: "postgres",
   host: "localhost",
-  database: "libraryNeub",
+  database: "NatrajDB",
   password: "root",
   port: 5432,
 });
@@ -80,6 +80,8 @@ app.post("/add_book", async (req, res) => {
 //     res.status(500).send('Error executing query');
 //   }
 // });
+
+/*****************************************************************************************************************/
 
 /////Mohith's Workspace/////
 
@@ -191,6 +193,56 @@ app.post('/adminControl/updateBook/:id', async (req, res) => {
 
 /**********************************************************************************************************************************/
 
+//Arvind workspace/////////////////
+
+// Route to get user by ID
+
+app.get('/adminControl/users', async (req, res) => {
+  var users = {};
+  try {
+    const result = await queryDatabase('SELECT id, username, is_admin, created_at FROM Users', []);
+    users.data=result;
+      } catch (error) {
+    console.error('Error fetching users', error.stack);
+    res.status(500).json({ message: 'Error fetching users' });
+    return;
+  }
+  res.status(200).json(users);
+});
+
+//endpoint to get user by ID
+app.get('/adminControl/user/:id', async (req, res) => {
+  const { id } = req.params;
+  const userId = parseInt(id, 10);
+  if (isNaN(userId)) {
+    return res.status(400).json({ message: "Invalid user id" });
+  }
+  var user = {};
+
+  try {
+    //query the database to get user with id
+    const result = await queryDatabase("SELECT id, username, is_admin, created_at FROM Users WHERE id=$1", [userId]);
+
+  if (result.length === 0) {
+    return res.status(404).json({message: "user not found"});
+  }
+    user.data = result;
+  } catch (error) {
+    console.error("Error executing query to get particular user", error.stack);
+    res.status(500).send("Error executing query to get particular user");
+    return;
+  }
+
+  //send back whatever is in 
+  res.status(200).json(user);
+});
+
+
+
+
+
+/***********************************************************************************************************************/
+
 //try {
 //query the database to get all books
 //const result = await queryDatabase('UPDATE Books set title=$1 where id=$2', [title,id]);
@@ -205,7 +257,7 @@ app.post('/adminControl/updateBook/:id', async (req, res) => {
 
 // Start the server
 app.listen(port, () => {
-  console.log(`Express appp listening at http://localhost:${port}`);
+  console.log(`Express app listening at http://localhost:${port}`);
 });
 
 //getBooks -> get ID, Author, Title, Year, Publisher
