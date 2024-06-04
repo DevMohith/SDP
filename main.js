@@ -189,6 +189,36 @@ app.post('/adminControl/updateBook/:id', async (req, res) => {
   res.status(200).json(updatedBook);
 });
 
+//Gagan Workspace
+app.post("/adminControl/removeBook", async (req, res) => {
+  const { book_name, author_name, genre, description, published_year } =
+    req.body;
+  // vaidating input
+  if (!book_name || !author_name || !genre || !description || !published_year) {
+    return res
+      .status(400)
+      .json({
+        message:
+          "All fields are required: book_name, author_name, genre, description, published_year",
+      });
+  }
+  var book = {};
+  try {
+    //query the database to add new book
+    const result = await queryDatabase(
+      "DELETE FROM Books WHERE (book_name, author_name, genre, description, published_date) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+      [book_name, author_name, genre, description, published_year]
+    );
+    book.data = result;
+  } catch (error) {
+    console.error("Error executing query", error.stack);
+    res.status(500).send("Error executing query");
+    return;
+  }
+  res.status(200).json(book);
+  //res.status(201).json({ message: 'Book added successfully', book: result[0] });
+});
+
 //endpoint for borrow book for users.
 //endpoint for return borrowed book with finecheck and fine details.
 
