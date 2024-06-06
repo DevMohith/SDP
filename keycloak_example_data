@@ -1,0 +1,29 @@
+{
+  "sub": "12345678-1234-1234-1234-123456789012",
+  "name": "John Doe",
+  "preferred_username": "jdoe",
+  "given_name": "John",
+  "family_name": "Doe",
+  "email": "johndoe@example.com",
+  "email_verified": true,
+  "roles": [
+    "user",
+    "admin"
+  ],
+  "groups": [
+    "/group1",
+    "/group2"
+  ],
+  "locale": "en",
+  "address": {
+    "formatted": "1234 Main St\nSpringfield, USA",
+    "street_address": "1234 Main St",
+    "locality": "Springfield",
+    "region": "IL",
+    "postal_code": "62701",
+    "country": "USA"
+  },
+  "phone_number": "+1-202-555-0171",
+  "phone_number_verified": false
+}
+

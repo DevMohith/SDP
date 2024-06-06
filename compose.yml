@@ -1,0 +1,82 @@
+version: '3.9'
+
+services:
+  postgres-master:
+    image: bitnami/postgresql:latest
+    environment:
+      - POSTGRESQL_POSTGRES_PASSWORD=postgrespassword
+      - POSTGRESQL_USERNAME=customuser
+      - POSTGRESQL_PASSWORD=custompassword
+      - POSTGRESQL_DATABASE=customdatabase
+      - POSTGRESQL_REPLICATION_MODE=master
+      - POSTGRESQL_REPLICATION_USER=repl_user
+      - POSTGRESQL_REPLICATION_PASSWORD=repl_password
+    volumes:
+      - /srv/pg3:/bitnami/postgresql
+    networks:
+      postgres-replication:
+        aliases:
+          - postgres-master
+
+  postgres-slave1:
+    image: bitnami/postgresql:latest
+    environment:
+      - POSTGRESQL_POSTGRES_PASSWORD=postgrespassword
+      - POSTGRESQL_USERNAME=customuser
+      - POSTGRESQL_PASSWORD=custompassword
+      - POSTGRESQL_DATABASE=customdatabase
+      - POSTGRESQL_REPLICATION_MODE=slave
+      - POSTGRESQL_REPLICATION_USER=repl_user
+      - POSTGRESQL_REPLICATION_PASSWORD=repl_password
+      - POSTGRESQL_MASTER_HOST=postgres-master
+    volumes:
+      - /srv/pg2:/bitnami/postgresql
+    networks:
+      postgres-replication:
+        aliases:
+          - postgres-slave1
+
+  postgres-slave2:
+    image: bitnami/postgresql:latest
+    environment:
+      - POSTGRESQL_POSTGRES_PASSWORD=postgrespassword
+      - POSTGRESQL_USERNAME=customuser
+      - POSTGRESQL_PASSWORD=custompassword
+      - POSTGRESQL_DATABASE=customdatabase
+      - POSTGRESQL_REPLICATION_MODE=slave
+      - POSTGRESQL_REPLICATION_USER=repl_user
+      - POSTGRESQL_REPLICATION_PASSWORD=repl_password
+      - POSTGRESQL_MASTER_HOST=postgres-master
+    volumes:
+      - /srv/pg1:/bitnami/postgresql
+    networks:
+      postgres-replication:
+        aliases:
+          - postgres-slave2
+
+  pgpool:
+    image: legacy-registry.sexycoders.org/pgpool:latest
+    ports:
+      - "5432:5432"
+    environment:
+      - PGPOOL_BACKEND_NODES=0:postgres-master:5432,1:postgres-slave1:5432,2:postgres-slave2:5432
+      - PGPOOL_POSTGRES_USERNAME=postgres
+      - PGPOOL_POSTGRES_PASSWORD=postgrespassword
+      - PGPOOL_ADMIN_USERNAME=admin
+      - PGPOOL_ADMIN_PASSWORD=adminpassword
+      - PGPOOL_ENABLE_LOAD_BALANCING=yes
+      - PGPOOL_MAX_POOL=35
+      - PGPOOL_SR_CHECK_USER=postgres
+      - PGPOOL_SR_CHECK_PASSWORD=postgrespassword
+      - PGPOOL_HEALTH_CHECK_USER=postgres
+      - PGPOOL_HEALTH_CHECK_PASSWORD=postgrespassword
+    networks:
+      - postgres-replication
+    depends_on:
+      - postgres-master
+      - postgres-slave1
+      - postgres-slave2
+
+networks:
+  postgres-replication:
+

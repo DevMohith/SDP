@@ -90,6 +90,10 @@ app.get("/get_books/:id", async (req, res) => {
 app.post("/adminControl/addBook", async (req, res) => {
   const { book_name, author_name, genre, description, published_year } =
     req.body;
+
+  $user.groups[0]==!admin;
+    res.status(403).send("Forbidden.");;
+
   // validating input
   if (!book_name || !author_name || !genre || !description || !published_year) {
     return res
@@ -180,45 +184,45 @@ app.post("/adminControl/removeBook", async (req, res) => {
 
 //endpoint to get all users details
 
-app.get('/adminControl/users', async (req, res) => {
-  var users = {};
-  try {
-    const result = await queryDatabase('SELECT id, username, is_admin, created_at FROM Users', []);
-    users.data=result;
-      } catch (error) {
-    console.error('Error fetching users', error.stack);
-    res.status(500).json({ message: 'Error fetching users' });
-    return;
-  }
-  res.status(200).json(users);
-});
+//app.get('/adminControl/users', async (req, res) => {
+  //var users = {};
+  //try {
+    //const result = await queryDatabase('SELECT id, username, is_admin, created_at FROM Users', []);
+    //users.data=result;
+      //} catch (error) {
+    //console.error('Error fetching users', error.stack);
+    //res.status(500).json({ message: 'Error fetching users' });
+    //return;
+  //}
+  //res.status(200).json(users);
+//});
 
 //endpoint to get user by ID
-app.get('/adminControl/user/:id', async (req, res) => {
-  const { id } = req.params;
-  const userId = parseInt(id, 10);
-  if (isNaN(userId)) {
-    return res.status(400).json({ message: "Invalid user id" });
-  }
-  var user = {};
+//app.get('/adminControl/user/:id', async (req, res) => {
+  //const { id } = req.params;
+  //const userId = parseInt(id, 10);
+  //if (isNaN(userId)) {
+    //return res.status(400).json({ message: "Invalid user id" });
+  //}
+  //var user = {};
 
-  try {
-    //query the database to get user with id
-    const result = await queryDatabase("SELECT id, username, is_admin, created_at FROM Users WHERE id=$1", [userId]);
+  //try {
+    ////query the database to get user with id
+    //const result = await queryDatabase("SELECT id, username, is_admin, created_at FROM Users WHERE id=$1", [userId]);
 
-  if (result.length === 0) {
-    return res.status(404).json({message: "user not found"});
-  }
-    user.data = result;
-  } catch (error) {
-    console.error("Error executing query to get particular user", error.stack);
-    res.status(500).send("Error executing query to get particular user");
-    return;
-  }
+  //if (result.length === 0) {
+    //return res.status(404).json({message: "user not found"});
+  //}
+    //user.data = result;
+  //} catch (error) {
+    //console.error("Error executing query to get particular user", error.stack);
+    //res.status(500).send("Error executing query to get particular user");
+    //return;
+  //}
 
-  //send back whatever is in 
-  res.status(200).json(user);
-});
+  ////send back whatever is in 
+  //res.status(200).json(user);
+//});
 
 /************************************************************************************************************************************* */
 
@@ -236,7 +240,8 @@ app.get('/adminControl/user/:id', async (req, res) => {
 //
 //
 app.post("/user/borrowBook", async (req, res) => {
-  const { book_id, user_id } = req.body;
+  const { book_id} = req.body;
+  const user_id = $user.sub;
   if (!book_id || !user_id) {
     return res.status(400).json({ message: "All fields are required" });
   }
