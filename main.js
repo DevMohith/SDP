@@ -33,54 +33,6 @@ app.get("/", (req, res) => {
   res.send("Welcome to the Express app!");
 });
 
-// Test endpoint 1
-app.get("/test1", (req, res) => {
-  res.send("This is test endpoint 1");
-});
-
-// Test endpoint 2
-app.post("/test2", (req, res) => {
-  const data = req.body;
-  res.send(`Received data: ${JSON.stringify(data)}`);
-});
-
-// Test endpoint 3
-app.put("/test3", (req, res) => {
-  const data = req.body;
-  res.send(`Updated data: ${JSON.stringify(data)}`);
-});
-
-// Endpoint to add a book
-app.post("/add_book", async (req, res) => {
-  const data = req.body;
-  try {
-    const result = await queryDatabase(
-      "INSERT INTO books (title, author, year) VALUES ($1, $2, $3) RETURNING *",
-      [data.title, data.author, data.year]
-    );
-    res.json(result[0]);
-  } catch (error) {
-    console.error("Error executing query", error.stack);
-    res.status(500).send("Error executing query");
-  }
-});
-
-// Endpoint to delete a book by ID
-// app.delete('/delete_book/:id', async (req, res) => {
-//   const { id } = req.params;
-//   try {
-//     const result = await queryDatabase('DELETE FROM books WHERE id = $1 RETURNING *', [id]);
-//     if (result.length === 0) {
-//       res.status(404).send('Book not found');
-//     } else {
-//       res.send(result[0]);
-//     }
-//   } catch (error) {
-//     console.error('Error executing query', error.stack);
-//     res.status(500).send('Error executing query');
-//   }
-// });
-
 /////Mohith's Workspace/////
 
 // Endpoint to get all books from PostgreSQL
@@ -90,7 +42,7 @@ app.get('/get_books', async (req, res) => {
 
   try {
     //query the database to get all books
-    const result = await queryDatabase('SELECT * FROM books', []);
+    const result = await queryDatabase('SELECT title,author,isbn,publicationyear,publisher FROM library_collection_inventory', []);
     t.data = result;
   } catch (error) {
     console.error('Error executing query', error.stack);
@@ -118,7 +70,7 @@ app.get("/get_books/:id", async (req, res) => {
   try {
     //query the database to get particular book
     const result = await queryDatabase(
-      "SELECT book_name,author_name,genre,description,published_year FROM Books WHERE id=$1",
+      "SELECT * FROM library_collection_inventory WHERE id=$1",
       [bookId]
     );
     if (result.length === 0) {
@@ -151,7 +103,7 @@ app.post("/adminControl/addBook", async (req, res) => {
   try {
     //query the database to add new book
     const result = await queryDatabase(
-      "INSERT INTO Books (book_name, author_name, genre, description, published_date) VALUES ($1, $2, $3, $4, $5) RETURNING *",
+      "INSERT INTO library_collection_inventory (title,, author_name, genre, description, published_date) VALUES ($1, $2, $3, $4, $5) RETURNING *",
       [book_name, author_name, genre, description, published_year]
     );
     book.data = result;
@@ -176,7 +128,7 @@ app.post('/adminControl/updateBook/:id', async (req, res) => {
   var updatedBook = {};
   try {
     const result = await queryDatabase(
-      'UPDATE Books SET book_name=$1, author_name=$2, genre=$3, description=$4, published_date=$5 WHERE id=$6 RETURNING *',
+      'UPDATE library_collection_inventory SET book_name=$1, author_name=$2, genre=$3, description=$4, published_date=$5 WHERE id=$6 RETURNING *',
       [book_name, author_name, genre, description, published_year, bookId]
     );
     if (result.length === 0) return res.status(404).json({ message: 'Book not found' });
@@ -279,6 +231,117 @@ app.get('/adminControl/user/:id', async (req, res) => {
 // res.status(500).send('Error executing query');
 // return;
 //}
+//
+//
+//
+//
+app.post("/user/borrowBook", async (req, res) => {
+  const { book_id, user_id } = req.body;
+  if (!book_id || !user_id) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+
+  //select count by isbn
+  //select cout from borrowed books and see how many he has
+
+  var book = {};
+  try {
+    var new_date = new Date().toISOString();
+    const result = await queryDatabase(
+      "INSERT INTO BorrowedBooks (book_id, user_id, borrowed_date) VALUES ($1, $2, $3) RETURNING *",
+      [book_id, user_id, new_date]
+    );
+    book.data = result;
+  } catch (error) {
+    console.error("Error executing query", error.stack);
+    res.status(500).send("Error executing query");
+    return;
+  }
+  res.status(200).json(book);
+});
+
+app.post("/user/returnBook", async (req, res) => {
+  const { book_id, user_id } = req.body;
+  if (!book_id || !user_id) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+  var book = {};
+  try {
+    const result = await queryDatabase(
+      "DELETE FROM BorrowedBooks WHERE book_id=$1 AND user_id=$2 RETURNING *",
+      [book_id, user_id]
+    );
+    book.data = result;
+  } catch (error) {
+    console.error("Error executing query", error.stack);
+    res.status(500).send("Error executing query");
+    return;
+  }
+  res.status(200).json(book);
+});
+
+app.post("/user/extendBook", async (req, res) => {
+  const { book_id, user_id } = req.body;
+  if (!book_id || !user_id) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+  var book = {};
+  try {
+    const result = await queryDatabase(
+      "UPDATE BorrowedBooks SET extended=true WHERE book_id=$1 AND user_id=$2 RETURNING *",
+      [book_id, user_id]
+    );
+    book.data = result;
+  } catch (error) {
+    console.error("Error executing query", error.stack);
+    res.status(500).send("Error executing query");
+    return;
+  }
+  res.status(200).json(book);
+});
+
+app.get("/books/search", async (req, res) => {
+  const { search, type } = req.query;
+  if (!search || !type) {
+    return res.status(400).json({ message: "Search query and type are required" });
+  }
+
+  let query;
+  let values;
+
+  switch (type.toUpperCase()) {
+    case "ALL":
+      query = "SELECT * FROM Books WHERE title ILIKE $1 OR author ILIKE $1 OR genre ILIKE $1 OR publisher ILIKE $1 OR isbn ILIKE $1";
+      values = [`%${search}%`];
+      break;
+    case "TITLE":
+      query = "SELECT * FROM Books WHERE title ILIKE $1";
+      values = [`%${search}%`];
+      break;
+    case "AUTHOR":
+      query = "SELECT * FROM Books WHERE author ILIKE $1";
+      values = [`%${search}%`];
+      break;
+    case "PUBLISHER":
+      query = "SELECT * FROM Books WHERE publisher ILIKE $1";
+      values = [`%${search}%`];
+      break;
+    case "ISBN":
+      query = "SELECT * FROM Books WHERE isbn ILIKE $1";
+      values = [`%${search}%`];
+      break;
+    default:
+      return res.status(400).json({ message: "Invalid search type" });
+  }
+
+  try {
+    const result = await queryDatabase(query, values);
+    res.json({ data: result });
+  } catch (error) {
+    console.error("Error executing query", error.stack);
+    res.status(500).send("Error executing query");
+  }
+});
 
 //send back whatever is in t
 
