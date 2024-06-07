@@ -12,7 +12,7 @@ app.use(express.json());
 const pool = new Pool({
   user: "postgres",
   host: "localhost",
-  database: "libraryNeub",
+  database: "SDP",
   password: "root",
   port: 5432,
 });
@@ -170,8 +170,8 @@ app.post("/adminControl/removeBook", async (req, res) => {
   try {
     //query the database to add new book
     const result = await queryDatabase(
-      "DELETE FROM Books WHERE (book_name, author_name, genre, description, published_date) VALUES ($1, $2, $3, $4, $5) RETURNING *",
-      [book_name, author_name, genre, description, published_year]
+      "DELETE FROM LIBRAR_COLLECTION_INVENTORY WHERE (BIBNUM = $1 OR TITLE = $2 OR AUTHOR = $3 OR ISBN = $4 OR PUBLICATIONYEAR = $5 OR PUBLISHER = $6 OR SUBJECTS = $7 OR ITEMTYPE = $8 OR ITEMCOLLECTION = $9 OR FLOATINGITEM = $10 OR ITEMLOCATION = $11 OR REPORTDATE = $12 OR ITEMCOUNT = $13) RETURNING *",
+      [bibnum, title, author, isbn, publicationyear, publisher, subjects, itemtype, itemcollection, floatingitem, itemlocation, reportdate, itemcount]
     );
     book.data = result;
   } catch (error) {
