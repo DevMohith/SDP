@@ -155,15 +155,15 @@ app.post('/adminControl/updateBook/:id', async (req, res) => {
 
 //Gagan Workspace
 app.post("/adminControl/removeBook", async (req, res) => {
-  const { book_name, author_name, genre, description, published_year } =
+  const { bibnum, title, author, isbn, publicationyear, publisher, subjects, itemtype, itemcollection, floatingitem, itemlocation, reportdate, itemcount } =
     req.body;
   // vaidating input
-  if (!book_name || !author_name || !genre || !description || !published_year) {
+  if (!bibnum || !title || !author || !isbn || !publicationyear || !publisher || !subjects || !itemtype || !itemcollection || !floatingitem || !itemlocation || !reportdate || !itemcount) {
     return res
       .status(400)
       .json({
         message:
-          "All fields are required: book_name, author_name, genre, description, published_year",
+          "Any Input Is Required",
       });
   }
   var book = {};
@@ -183,6 +183,36 @@ app.post("/adminControl/removeBook", async (req, res) => {
   //res.status(201).json({ message: 'Book added successfully', book: result[0] });
 });
 
+app.post("/borrowBook", async (req, res) => {
+  const { bibnum, user_id } = req.body;
+
+  // Validate input data
+  if (!bibnum || !user_id) {
+    return res
+      .status(400)
+      .json({ message: "Missing required fields: bibnum, user_id" });
+  }
+
+  try {
+    // Check book availability
+    const available = await isBookAvailable(bibnum);
+    if (!available) {
+      return res.status(400).json({ message: "Book is not currently available" });
+    }
+
+    // Borrow the book
+    const borrowResult = await borrowBook(bibnum, user_id);
+    if (!borrowResult) {
+      return res.status(500).json({ message: "Error borrowing book" });
+    }
+
+    // Success response
+    return res.status(201).json({ message: "Book borrowed successfully" });
+  } catch (error) {
+    console.error("Error borrowing book:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+});
 
 
 /**********************************************************************************************************************************/
