@@ -34,6 +34,7 @@ app.get("/", (req, res) => {
 });
 
 /////Mohith's Workspace/////
+//Worked on get all books and get detailed books by connecting to the new DB and tested in Postman both the endpoints are up and working//
 
 // Endpoint to get all books from PostgreSQL
 app.get('/get_books', async (req, res) => {
@@ -42,7 +43,7 @@ app.get('/get_books', async (req, res) => {
 
   try {
     //query the database to get all books
-    const result = await queryDatabase('SELECT title,author,isbn,publicationyear,publisher FROM library_collection_inventory', []);
+    const result = await queryDatabase('SELECT title,author,isbn,publicationyear,publisher FROM library_collection_inventory limit 25', []);
     t.data = result;
   } catch (error) {
     console.error('Error executing query', error.stack);
@@ -54,11 +55,7 @@ app.get('/get_books', async (req, res) => {
   res.json(t);
 });
 
-/**********************************************************************************************************************************/
-
-
-
-// endpoint to get particular book
+// endpoint to get detailed book
 
 app.get("/get_books/:id", async (req, res) => { 
   const { id } = req.params;
@@ -70,7 +67,9 @@ app.get("/get_books/:id", async (req, res) => {
   try {
     //query the database to get particular book
     const result = await queryDatabase(
-      "SELECT * FROM library_collection_inventory WHERE id=$1",
+    //we Didn't defined the id's title in Database coloumn, so i am unable to get the particular book with id////
+    //so i just tried with the bibnum=$1 by replacing id=$1///////
+      "SELECT * FROM library_collection_inventory WHERE bibnum=$1",
       [bookId]
     );
     if (result.length === 0) {
@@ -84,6 +83,7 @@ app.get("/get_books/:id", async (req, res) => {
   }
   res.status(200).json(book);
 });
+
 
 /* Neubins Workspace*/
 //endpoint to add a new book for admin
@@ -277,7 +277,7 @@ app.post("/borrowBook", async (req, res) => {
 //
 //
 
-//Arnav Workspace////
+////Arnav Workspace////
 
 
 app.post('/user/returnBook', async (req, res) => {
