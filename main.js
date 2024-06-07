@@ -294,6 +294,9 @@ app.post("/user/returnBook/", async (req, res) => {
 }); 
 
 
+//Arvind Workspace
+
+/*
 app.post("/user/extendBook", async (req, res) => {
   const { book_id, user_id } = req.body;
   if (!book_id || !user_id) {
@@ -313,6 +316,46 @@ app.post("/user/extendBook", async (req, res) => {
   }
   res.status(200).json(book);
 });
+*/
+
+
+//Arvind Workspace
+
+
+//Arvind Workspace
+
+
+app.post("/user/extendBook", async (req, res) => {
+  const { book_id} = req.body;
+  const user_id = $user.sub;
+
+  if (!book_id || !user_id) {
+    return res.status(400).json({ message: "Both book_id and user_id are required" });
+  }
+
+  var book = {};
+
+  try {
+    // Assuming extended is a boolean column in the BorrowedBooks table
+    const result = await queryDatabase(
+      "UPDATE BorrowedBooks SET extended=true WHERE book_id=$1 AND user_id=$2 RETURNING *",
+      [book_id, user_id]
+    );
+    
+    if (result.length === 0) {
+      return res.status(404).json({ message: "No matching record found to update" });
+    }
+
+    book.data = result;
+    res.status(200).json(book);
+  } catch (error) {
+    console.error("Error executing query", error.stack);
+    res.status(500).json({ message: "Error executing query" });
+  }
+});
+
+
+
 
 app.get("/books/search", async (req, res) => {
   const { search, type } = req.query;
