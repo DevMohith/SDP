@@ -246,53 +246,6 @@ app.post("/adminControl/removeBook", async (req, res) => {
 //
 //
 //
-app.post("/user/borrowBook", async (req, res) => {
-  const { book_id} = req.body;
-  const user_id = $user.sub;
-  if (!book_id || !user_id) {
-    return res.status(400).json({ message: "All fields are required" });
-  }
-
-  //select count by isbn
-  //select cout from borrowed books and see how many he has
-
-  var book = {};
-  try {
-    var new_date = new Date().toISOString();
-    const result = await queryDatabase(
-      "INSERT INTO BorrowedBooks (book_id, user_id, borrowed_date) VALUES ($1, $2, $3) RETURNING *",
-      [book_id, user_id, new_date]
-    );
-    book.data = result;
-  } catch (error) {
-    console.error("Error executing query", error.stack);
-    res.status(500).send("Error executing query");
-    return;
-  }
-  res.status(200).json(book);
-});
-
-app.post("/user/returnBook/", async (req, res) => {
-  const { book_id} = req.body;
-  const user_id = $user.sub;
-  if (!book_id || !user_id) {
-    return res.status(400).json({ message: "All fields are required" });
-  }
-  var book = {};
-  try {
-    const result = await queryDatabase(
-      "DELETE FROM BorrowedBooks WHERE book_id=$1 AND user_id=$2 RETURNING *",
-      [book_id, user_id]
-    );
-    book.data = result;
-  } catch (error) {
-    console.error("Error executing query", error.stack);
-    res.status(500).send("Error executing query");
-    return;
-  }
-  res.status(200).json(book);
-}); 
-
 
 //Arvind Workspace
 
