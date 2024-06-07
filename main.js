@@ -276,54 +276,66 @@ app.post("/borrowBook", async (req, res) => {
 //
 //
 //
-app.post("/user/borrowBook", async (req, res) => {
+
+//Arnav Workspace
+
+
+app.post('/user/returnBook', async (req, res) => {
   const { book_id} = req.body;
-  const user_id = $user.sub;
-  if (!book_id || !user_id) {
-    return res.status(400).json({ message: "All fields are required" });
-  }
+ const user_id = $user.sub;// Assuming Keycloak token has sub as user ID
 
-  //select count by isbn
-  //select cout from borrowed books and see how many he has
+ if (!book_id) {
+   return res.status(400).json({ message: "Book ID is required" });
+ }
+ var remainingBook = {}
+ 
+ try {
+   // Check if the book is currently borrowed by the user
+   /* const borrowedBook = await queryDatabase(
+     'SELECT * FROM BorrowedBooks WHERE book_id = $1 AND user_id = $2',
+     [book_id, user_id]
+   );
+   */
+/*
+   if (borrowedBook.length === 0) {
+     return res.status(400).json({ message: 'Book not borrowed by this user or already returned' });
+   }
+*/
+   // const borrowedDate = new Date(borrowedBook[0].borrowed_date);
+   // const returnDate = new Date();
+   // const twoWeeksInMs = 14 * 24 * 60 * 60 * 1000; // 2 weeks in milliseconds
+   // const delayInWeeks = Math.max(0, Math.floor((returnDate - borrowedDate - twoWeeksInMs) / (7 * 24 * 60 * 60 * 1000)));
+   // const fine = 0.5 * delayInWeeks; // 50% increase each week after 2 weeks
 
-  var book = {};
-  try {
-    var new_date = new Date().toISOString();
-    const result = await queryDatabase(
-      "INSERT INTO BorrowedBooks (book_id, user_id, borrowed_date) VALUES ($1, $2, $3) RETURNING *",
-      [book_id, user_id, new_date]
-    );
-    book.data = result;
-  } catch (error) {
-    console.error("Error executing query", error.stack);
-    res.status(500).send("Error executing query");
-    return;
-  }
-  res.status(200).json(book);
+   // Remove the entry from BorrowedBooks
+   const result = await queryDatabase('DELETE FROM BorrowedBooks WHERE book_id = $1 AND user_id = $2 RETURNING *', [book_id, user_id]);
+   
+   // to return all the remaining borrowed books data
+   const userBorrowedBooks = await queryDatabase('SELECT * FROM BorrowedBooks WHERE user_id = $1 ', [user_id]);
+   remainingBook.data = userBorrowedBooks;
+
+   if (userBorrowedBooks.length === 0) {
+     return res.status(404).json({ message: "All the borrowed books are returened" });
+   }
+
+   // Update the Books table to mark the book as not borrowed
+   // await queryDatabase('UPDATE Books SET is_borrowed = FALSE WHERE id = $1', [book_id]);
+
+  // res.status(200).json({ message: 'Book returned successfully', fine: fine, book: result[0] });
+ } catch (error) {
+   console.error('Error returning book', error.stack);
+   res.status(500).json({ message: 'Error returning book' });
+ }
+ res.status(200).json(remainingBook);
 });
 
-app.post("/user/returnBook/", async (req, res) => {
-  const { book_id} = req.body;
-  const user_id = $user.sub;
-  if (!book_id || !user_id) {
-    return res.status(400).json({ message: "All fields are required" });
-  }
-  var book = {};
-  try {
-    const result = await queryDatabase(
-      "DELETE FROM BorrowedBooks WHERE book_id=$1 AND user_id=$2 RETURNING *",
-      [book_id, user_id]
-    );
-    book.data = result;
-  } catch (error) {
-    console.error("Error executing query", error.stack);
-    res.status(500).send("Error executing query");
-    return;
-  }
-  res.status(200).json(book);
-}); 
 
 
+
+
+//Arvind Workspace
+
+/*
 app.post("/user/extendBook", async (req, res) => {
   const { book_id, user_id } = req.body;
   if (!book_id || !user_id) {
@@ -343,6 +355,44 @@ app.post("/user/extendBook", async (req, res) => {
   }
   res.status(200).json(book);
 });
+*/
+
+
+
+//Arvind Workspace
+
+
+app.post("/user/extendBook", async (req, res) => {
+  const { book_id} = req.body;
+  const user_id = $user.sub;
+
+  if (!book_id || !user_id) {
+    return res.status(400).json({ message: "Both book_id and user_id are required" });
+  }
+
+  var book = {};
+
+  try {
+    // Assuming extended is a boolean column in the BorrowedBooks table
+    const result = await queryDatabase(
+      "UPDATE BorrowedBooks SET extended=true WHERE book_id=$1 AND user_id=$2 RETURNING *",
+      [book_id, user_id]
+    );
+    
+    if (result.length === 0) {
+      return res.status(404).json({ message: "No matching record found to update" });
+    }
+
+    book.data = result;
+    res.status(200).json(book);
+  } catch (error) {
+    console.error("Error executing query", error.stack);
+    res.status(500).json({ message: "Error executing query" });
+  }
+});
+
+
+
 
 app.get("/books/search", async (req, res) => {
   const { search, type } = req.query;
