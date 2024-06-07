@@ -247,6 +247,62 @@ app.post("/adminControl/removeBook", async (req, res) => {
 //
 //
 
+//Arnav Workspace
+
+
+app.post('/user/returnBook', async (req, res) => {
+  const { book_id} = req.body;
+ const user_id = $user.sub;// Assuming Keycloak token has sub as user ID
+
+ if (!book_id) {
+   return res.status(400).json({ message: "Book ID is required" });
+ }
+ var remainingBook = {}
+ 
+ try {
+   // Check if the book is currently borrowed by the user
+   /* const borrowedBook = await queryDatabase(
+     'SELECT * FROM BorrowedBooks WHERE book_id = $1 AND user_id = $2',
+     [book_id, user_id]
+   );
+   */
+/*
+   if (borrowedBook.length === 0) {
+     return res.status(400).json({ message: 'Book not borrowed by this user or already returned' });
+   }
+*/
+   // const borrowedDate = new Date(borrowedBook[0].borrowed_date);
+   // const returnDate = new Date();
+   // const twoWeeksInMs = 14 * 24 * 60 * 60 * 1000; // 2 weeks in milliseconds
+   // const delayInWeeks = Math.max(0, Math.floor((returnDate - borrowedDate - twoWeeksInMs) / (7 * 24 * 60 * 60 * 1000)));
+   // const fine = 0.5 * delayInWeeks; // 50% increase each week after 2 weeks
+
+   // Remove the entry from BorrowedBooks
+   const result = await queryDatabase('DELETE FROM BorrowedBooks WHERE book_id = $1 AND user_id = $2 RETURNING *', [book_id, user_id]);
+   
+   // to return all the remaining borrowed books data
+   const userBorrowedBooks = await queryDatabase('SELECT * FROM BorrowedBooks WHERE user_id = $1 ', [user_id]);
+   remainingBook.data = userBorrowedBooks;
+
+   if (userBorrowedBooks.length === 0) {
+     return res.status(404).json({ message: "All the borrowed books are returened" });
+   }
+
+   // Update the Books table to mark the book as not borrowed
+   // await queryDatabase('UPDATE Books SET is_borrowed = FALSE WHERE id = $1', [book_id]);
+
+  // res.status(200).json({ message: 'Book returned successfully', fine: fine, book: result[0] });
+ } catch (error) {
+   console.error('Error returning book', error.stack);
+   res.status(500).json({ message: 'Error returning book' });
+ }
+ res.status(200).json(remainingBook);
+});
+
+
+
+
+
 //Arvind Workspace
 
 /*
@@ -271,8 +327,6 @@ app.post("/user/extendBook", async (req, res) => {
 });
 */
 
-
-//Arvind Workspace
 
 
 //Arvind Workspace
