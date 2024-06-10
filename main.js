@@ -67,6 +67,7 @@ app.get("/get_books/:id", async (req, res) => {
   try {
     //query the database to get particular book
     const result = await queryDatabase(
+    //dear gagan you didn't defined the id's title in Database coloumn, so i am unable to get the particular book with id////
     //we Didn't defined the id's title in Database coloumn, so i am unable to get the particular book with id////
     //so i just tried with the bibnum=$1 by replacing id=$1///////
       "SELECT * FROM library_collection_inventory WHERE bibnum=$1",
@@ -83,7 +84,6 @@ app.get("/get_books/:id", async (req, res) => {
   }
   res.status(200).json(book);
 });
-
 
 /* Neubins Workspace*/
 //endpoint to add a new book for admin
