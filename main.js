@@ -12,7 +12,7 @@ app.use(express.json());
 const pool = new Pool({
   user: "postgres",
   host: "localhost",
-  database: "mohithdb",
+  database: "SDP",
   password: "root",
   port: 5432,
 });
@@ -55,7 +55,6 @@ app.get('/get_books', async (req, res) => {
   res.json(t);
 });
 
-
 // endpoint to get detailed book
 
 app.get("/get_books/:id", async (req, res) => { 
@@ -69,6 +68,7 @@ app.get("/get_books/:id", async (req, res) => {
     //query the database to get particular book
     const result = await queryDatabase(
     //dear gagan you didn't defined the id's title in Database coloumn, so i am unable to get the particular book with id////
+    //we Didn't defined the id's title in Database coloumn, so i am unable to get the particular book with id////
     //so i just tried with the bibnum=$1 by replacing id=$1///////
       "SELECT * FROM library_collection_inventory WHERE bibnum=$1",
       [bookId]
@@ -86,31 +86,29 @@ app.get("/get_books/:id", async (req, res) => {
 });
 
 /* Neubins Workspace*/
-
 //endpoint to add a new book for admin
 
 app.post("/adminControl/addBook", async (req, res) => {
-  const { book_name, author_name, genre, description, published_year } =
-    req.body;
-
-  $user.groups[0]==!admin;
-    res.status(403).send("Forbidden.");;
-
+  const { bibnum, title, author, isbn, publicationyear, publisher, subjects, itemcollection, floatingitem, itemlocation, reportdate, itemcount} =
+    req.body;  
+if($user.groups[0]==!admin){
+  res.status(403).send("Forbidden.");}
+else{
   // validating input
-  if (!book_name || !author_name || !genre || !description || !published_year) {
+  if (!bibnum || !title || !author || !isbn || !publicationyear || !publisher || !subjects || !itemcollection || !floatingitem || !itemlocation|| !reportdate || !itemcount) {
     return res
       .status(400)
       .json({
         message:
-          "All fields are required: book_name, author_name, genre, description, published_year",
+          "All fields are required: bibnum, title, author, isbn, publicationyear, publisher, subjects, itemcollection, floatingitem, itemlocation, reportdate, itemcount",
       });
   }
   var book = {};
   try {
     //query the database to add new book
     const result = await queryDatabase(
-      "INSERT INTO library_collection_inventory (title,, author_name, genre, description, published_date) VALUES ($1, $2, $3, $4, $5) RETURNING *",
-      [book_name, author_name, genre, description, published_year]
+      "INSERT INTO library_collection_inventory (bibnum, title, author, isbn, publicationyear, publisher, subjects, itemcollection, floatingitem, itemlocation, reportdate, itemcount) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *",
+      [bibnum, title, author, isbn, publicationyear, publisher, subjects, itemcollection, floatingitem, itemlocation, reportdate, itemcount]
     );
     book.data = result;
   } catch (error) {
@@ -120,6 +118,8 @@ app.post("/adminControl/addBook", async (req, res) => {
   }
   res.status(200).json(book);
   //res.status(201).json({ message: 'Book added successfully', book: result[0] });
+}
+
 });
 
 //endpoint to update bookdetails with id for admin.
@@ -127,15 +127,20 @@ app.post("/adminControl/addBook", async (req, res) => {
 app.post('/adminControl/updateBook/:id', async (req, res) => {
   const { id } = req.params;
   const bookId = parseInt(id, 10);
-  const { book_name, author_name, genre, description, published_year } = req.body;
-  if (!book_name || !author_name || !genre || !description || !published_year) {
+  const { bibnum, title, author, isbn, publicationyear, publisher, subjects, itemcollection, floatingitem, itemlocation, reportdate, itemcount} =
+    req.body; 
+    if($user.groups[0]==!admin){
+      res.status(403).send("Forbidden.");}
+    else{
+    //validating data
+  if (!bibnum || !title || !author || !isbn || !publicationyear || !publisher || !subjects || !itemcollection || !floatingitem || !itemlocation|| !reportdate || !itemcount) {
     return res.status(400).json({ message: 'All fields are required' });
   }
   var updatedBook = {};
   try {
     const result = await queryDatabase(
-      'UPDATE library_collection_inventory SET book_name=$1, author_name=$2, genre=$3, description=$4, published_date=$5 WHERE id=$6 RETURNING *',
-      [book_name, author_name, genre, description, published_year, bookId]
+      'UPDATE library_collection_inventory SET bibnum=$1, title=$2, author=$3, isbn=$4, publicationyear=$5, publisher=$6, subjects=$7, itemcollection=$8, floatingitem=$9, itemlocation=$10, reportdate=$11, itemcount=$12 WHERE bibnum=$13 RETURNING *',
+      [bibnum, title, author, isbn, publicationyear, publisher, subjects, itemcollection, floatingitem, itemlocation, reportdate, itemcount, bookId]
     );
     if (result.length === 0) return res.status(404).json({ message: 'Book not found' });
     updatedBook.data = result;
@@ -145,27 +150,28 @@ app.post('/adminControl/updateBook/:id', async (req, res) => {
     return;
   }
   res.status(200).json(updatedBook);
+}
 });
 
 //Gagan Workspace
 app.post("/adminControl/removeBook", async (req, res) => {
-  const { book_name, author_name, genre, description, published_year } =
+  const { bibnum, title, author, isbn, publicationyear, publisher, subjects, itemtype, itemcollection, floatingitem, itemlocation, reportdate, itemcount } =
     req.body;
   // vaidating input
-  if (!book_name || !author_name || !genre || !description || !published_year) {
+  if (!bibnum || !title || !author || !isbn || !publicationyear || !publisher || !subjects || !itemtype || !itemcollection || !floatingitem || !itemlocation || !reportdate || !itemcount) {
     return res
       .status(400)
       .json({
         message:
-          "All fields are required: book_name, author_name, genre, description, published_year",
+          "Any Input Is Required",
       });
   }
   var book = {};
   try {
     //query the database to add new book
     const result = await queryDatabase(
-      "DELETE FROM Books WHERE (book_name, author_name, genre, description, published_date) VALUES ($1, $2, $3, $4, $5) RETURNING *",
-      [book_name, author_name, genre, description, published_year]
+      "DELETE FROM LIBRAR_COLLECTION_INVENTORY WHERE (BIBNUM = $1 OR TITLE = $2 OR AUTHOR = $3 OR ISBN = $4 OR PUBLICATIONYEAR = $5 OR PUBLISHER = $6 OR SUBJECTS = $7 OR ITEMTYPE = $8 OR ITEMCOLLECTION = $9 OR FLOATINGITEM = $10 OR ITEMLOCATION = $11 OR REPORTDATE = $12 OR ITEMCOUNT = $13) RETURNING *",
+      [bibnum, title, author, isbn, publicationyear, publisher, subjects, itemtype, itemcollection, floatingitem, itemlocation, reportdate, itemcount]
     );
     book.data = result;
   } catch (error) {
@@ -177,8 +183,37 @@ app.post("/adminControl/removeBook", async (req, res) => {
   //res.status(201).json({ message: 'Book added successfully', book: result[0] });
 });
 
-//endpoint for borrow book for users.
-//endpoint for return borrowed book with finecheck and fine details.
+app.post("/borrowBook", async (req, res) => {
+  const { bibnum, user_id } = req.body;
+
+  // Validate input data
+  if (!bibnum || !user_id) {
+    return res
+      .status(400)
+      .json({ message: "Missing required fields: bibnum, user_id" });
+  }
+
+  try {
+    // Check book availability
+    const available = await isBookAvailable(bibnum);
+    if (!available) {
+      return res.status(400).json({ message: "Book is not currently available" });
+    }
+
+    // Borrow the book
+    const borrowResult = await borrowBook(bibnum, user_id);
+    if (!borrowResult) {
+      return res.status(500).json({ message: "Error borrowing book" });
+    }
+
+    // Success response
+    return res.status(201).json({ message: "Book borrowed successfully" });
+  } catch (error) {
+    console.error("Error borrowing book:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
 
 /**********************************************************************************************************************************/
 
@@ -241,52 +276,66 @@ app.post("/adminControl/removeBook", async (req, res) => {
 //
 //
 //
-app.post("/user/borrowBook", async (req, res) => {
+
+////Arnav Workspace////
+
+
+app.post('/user/returnBook', async (req, res) => {
   const { book_id} = req.body;
-  const user_id = $user.sub;
-  if (!book_id || !user_id) {
-    return res.status(400).json({ message: "All fields are required" });
-  }
+ const user_id = $user.sub;// Assuming Keycloak token has sub as user ID
 
-  //select count by isbn
-  //select cout from borrowed books and see how many he has
+ if (!book_id) {
+   return res.status(400).json({ message: "Book ID is required" });
+ }
+ var remainingBook = {}
+ 
+ try {
+   // Check if the book is currently borrowed by the user
+   /* const borrowedBook = await queryDatabase(
+     'SELECT * FROM BorrowedBooks WHERE book_id = $1 AND user_id = $2',
+     [book_id, user_id]
+   );
+   */
+/*
+   if (borrowedBook.length === 0) {
+     return res.status(400).json({ message: 'Book not borrowed by this user or already returned' });
+   }
+*/
+   // const borrowedDate = new Date(borrowedBook[0].borrowed_date);
+   // const returnDate = new Date();
+   // const twoWeeksInMs = 14 * 24 * 60 * 60 * 1000; // 2 weeks in milliseconds
+   // const delayInWeeks = Math.max(0, Math.floor((returnDate - borrowedDate - twoWeeksInMs) / (7 * 24 * 60 * 60 * 1000)));
+   // const fine = 0.5 * delayInWeeks; // 50% increase each week after 2 weeks
 
-  var book = {};
-  try {
-    var new_date = new Date().toISOString();
-    const result = await queryDatabase(
-      "INSERT INTO BorrowedBooks (book_id, user_id, borrowed_date) VALUES ($1, $2, $3) RETURNING *",
-      [book_id, user_id, new_date]
-    );
-    book.data = result;
-  } catch (error) {
-    console.error("Error executing query", error.stack);
-    res.status(500).send("Error executing query");
-    return;
-  }
-  res.status(200).json(book);
+   // Remove the entry from BorrowedBooks
+   const result = await queryDatabase('DELETE FROM BorrowedBooks WHERE book_id = $1 AND user_id = $2 RETURNING *', [book_id, user_id]);
+   
+   // to return all the remaining borrowed books data
+   const userBorrowedBooks = await queryDatabase('SELECT * FROM BorrowedBooks WHERE user_id = $1 ', [user_id]);
+   remainingBook.data = userBorrowedBooks;
+
+   if (userBorrowedBooks.length === 0) {
+     return res.status(404).json({ message: "All the borrowed books are returened" });
+   }
+
+   // Update the Books table to mark the book as not borrowed
+   // await queryDatabase('UPDATE Books SET is_borrowed = FALSE WHERE id = $1', [book_id]);
+
+  // res.status(200).json({ message: 'Book returned successfully', fine: fine, book: result[0] });
+ } catch (error) {
+   console.error('Error returning book', error.stack);
+   res.status(500).json({ message: 'Error returning book' });
+ }
+ res.status(200).json(remainingBook);
 });
 
-app.post("/user/returnBook", async (req, res) => {
-  const { book_id, user_id } = req.body;
-  if (!book_id || !user_id) {
-    return res.status(400).json({ message: "All fields are required" });
-  }
-  var book = {};
-  try {
-    const result = await queryDatabase(
-      "DELETE FROM BorrowedBooks WHERE book_id=$1 AND user_id=$2 RETURNING *",
-      [book_id, user_id]
-    );
-    book.data = result;
-  } catch (error) {
-    console.error("Error executing query", error.stack);
-    res.status(500).send("Error executing query");
-    return;
-  }
-  res.status(200).json(book);
-});
 
+
+
+
+//Arvind Workspace
+
+/*
 app.post("/user/extendBook", async (req, res) => {
   const { book_id, user_id } = req.body;
   if (!book_id || !user_id) {
@@ -306,6 +355,44 @@ app.post("/user/extendBook", async (req, res) => {
   }
   res.status(200).json(book);
 });
+*/
+
+
+
+//Arvind Workspace
+
+
+app.post("/user/extendBook", async (req, res) => {
+  const { book_id} = req.body;
+  const user_id = $user.sub;
+
+  if (!book_id || !user_id) {
+    return res.status(400).json({ message: "Both book_id and user_id are required" });
+  }
+
+  var book = {};
+
+  try {
+    // Assuming extended is a boolean column in the BorrowedBooks table
+    const result = await queryDatabase(
+      "UPDATE BorrowedBooks SET extended=true WHERE book_id=$1 AND user_id=$2 RETURNING *",
+      [book_id, user_id]
+    );
+    
+    if (result.length === 0) {
+      return res.status(404).json({ message: "No matching record found to update" });
+    }
+
+    book.data = result;
+    res.status(200).json(book);
+  } catch (error) {
+    console.error("Error executing query", error.stack);
+    res.status(500).json({ message: "Error executing query" });
+  }
+});
+
+
+
 
 app.get("/books/search", async (req, res) => {
   const { search, type } = req.query;
