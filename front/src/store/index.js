@@ -6,7 +6,7 @@ const store = createStore({
     books: [],
     searchResults: [],
     isSearch: 0,
-    userInfo: null,
+    userInfo: "",
     borrowedBooks: []
   },
   mutations: {

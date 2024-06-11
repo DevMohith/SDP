@@ -3,8 +3,81 @@ const { Pool } = require("pg");
 const app = express();
 const port = 3000;
 const cors = require("cors"); // Import cors package
+const axios = require('axios');
+
+
+// Handle CORS preflight requests
+app.options('*', cors());  // Enable preflight requests for all routes
 
 const $book = require("./Book.js");
+//
+//
+//
+// Middleware to fetch user info from Keycloak and attach to request
+const userInfoMiddleware = async (req, res, next) => {
+  // Skip token validation for OPTIONS requests
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);  // Respond to OPTIONS requests with 200 status
+  }
+
+  console.log("Received headers:", req.headers); // Log all headers
+  const authHeader = req.headers['authorization'] || req.headers['Authorization'];
+  console.log("Authorization header:", authHeader); // Log the Authorization header specifically
+
+  const token = authHeader && authHeader.split(' ')[1];
+  console.log("Extracted token:", token); // Log the extracted token
+
+  if (!token) {
+    return res.status(401).json({ error: 'No token provided' });
+  }
+
+  try {
+    const response = await axios.get('https://sso.sexycoders.org/auth/realms/SDP-SRH-2024/protocol/openid-connect/userinfo', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    req.user = response.data;
+    next();
+  } catch (error) {
+    console.error('Error fetching user info:', error);
+    return res.status(401).json({ error: 'Invalid token' });
+  }
+};
+
+// Apply the middleware to all routes
+app.use(userInfoMiddleware);
+
+//
+// Middleware to fetch user info from Keycloak and attach to request
+//const userInfoMiddleware = async (req, res, next) => {
+  //console.log(req); // Add this line to log headers
+    //console.log("Received headers:", req.headers); // Add this line to log headers
+  //const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
+  //console.log(token);
+
+//  if (!token) {
+//    return res.status(401).json({ error: 'No token provided' });
+//  }
+//
+//  try {
+//    const response = await axios.get('https://sso.sexycoders.org/auth/realms/SDP-SRH-2024/protocol/openid-connect/userinfo', {
+//      headers: {
+//        Authorization: `Bearer ${token}`
+//      }
+//    });
+//
+//    req.user = response.data;
+//    next();
+//  } catch (error) {
+//    console.error('Error fetching user info:', error);
+//    return res.status(401).json({ error: 'Invalid token' });
+//  }
+//};
+
+// Apply the middleware to all routes
+//app.use(userInfoMiddleware);
 
 // Middleware to parse JSON requests
  app.use(cors());
@@ -93,7 +166,7 @@ app.get("/get_books/:id", async (req, res) => {
 app.post("/adminControl/addBook", async (req, res) => {
   const { bibnum, title, author, isbn, publicationyear, publisher, subjects, itemcollection, floatingitem, itemlocation, reportdate, itemcount} =
     req.body;  
-if($user.groups[0]==!admin){
+if(req.user.groups[0]==!admin){
   res.status(403).send("Forbidden.");}
 else{
   // validating input
@@ -131,7 +204,7 @@ app.post('/adminControl/updateBook/:id', async (req, res) => {
   const bookId = parseInt(id, 10);
   const { bibnum, title, author, isbn, publicationyear, publisher, subjects, itemcollection, floatingitem, itemlocation, reportdate, itemcount} =
     req.body; 
-    if($user.groups[0]==!admin){
+    if(req.user.groups[0]==!admin){
       res.status(403).send("Forbidden.");}
     else{
     //validating data
@@ -312,8 +385,8 @@ app.post("/adminControl/getBorrowedBooks", async (req, res) => {
 
 
 app.post('/user/returnBook', async (req, res) => {
-  const { bibnum} = req.body;
- const user_id = $user.sub;// Assuming Keycloak token has sub as user ID
+  const { book_id} = req.body;
+ const user_id = req.user.sub;// Assuming Keycloak token has sub as user ID
 
  if (!bibnum) {
    return res.status(400).json({ message: "Book ID is required" });
@@ -394,8 +467,8 @@ app.post("/user/extendBook", async (req, res) => {
 
 
 app.post("/user/extendBook", async (req, res) => {
-  const {bibnum} = req.body;
-  const user_id = $user.sub;
+  const { book_id} = req.body;
+  const user_id = req.user.sub;
 
   if (!bibnum || !user_id) {
     return res.status(400).json({ message: "Both book_id and user_id are required" });
