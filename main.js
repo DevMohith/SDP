@@ -394,10 +394,10 @@ app.post("/user/extendBook", async (req, res) => {
 
 
 app.post("/user/extendBook", async (req, res) => {
-  const { book_id} = req.body;
+  const {bibnum} = req.body;
   const user_id = $user.sub;
 
-  if (!book_id || !user_id) {
+  if (!bibnum || !user_id) {
     return res.status(400).json({ message: "Both book_id and user_id are required" });
   }
 
@@ -406,8 +406,8 @@ app.post("/user/extendBook", async (req, res) => {
   try {
     // Assuming extended is a boolean column in the BorrowedBooks table
     const result = await queryDatabase(
-      "UPDATE BorrowedBooks SET extended=true WHERE book_id=$1 AND user_id=$2 RETURNING *",
-      [book_id, user_id]
+      "UPDATE checkouts_by_title SET checkintime = checkintime + interval '14 days' WHERE bibnum=$1 AND user_id =$2; RETURNING *",
+      [bibnum, user_id]
     );
     
     if (result.length === 0) {
