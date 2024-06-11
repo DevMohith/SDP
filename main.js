@@ -312,10 +312,10 @@ app.post("/adminControl/getBorrowedBooks", async (req, res) => {
 
 
 app.post('/user/returnBook', async (req, res) => {
-  const { book_id} = req.body;
+  const { bibnum} = req.body;
  const user_id = $user.sub;// Assuming Keycloak token has sub as user ID
 
- if (!book_id) {
+ if (!bibnum) {
    return res.status(400).json({ message: "Book ID is required" });
  }
  var remainingBook = {}
@@ -339,14 +339,14 @@ app.post('/user/returnBook', async (req, res) => {
    // const fine = 0.5 * delayInWeeks; // 50% increase each week after 2 weeks
 
    // Remove the entry from BorrowedBooks
-   const result = await queryDatabase('DELETE FROM BorrowedBooks WHERE book_id = $1 AND user_id = $2 RETURNING *', [book_id, user_id]);
+   const result = await queryDatabase('UPDATE checkouts_by_title SET checkintime = current_timestamp, checkedout = false WHERE checkedout=true AND bibnum=$1 AND user_id=$2 RETURNING *', [bibnum, user_id]);
    
    // to return all the remaining borrowed books data
-   const userBorrowedBooks = await queryDatabase('SELECT * FROM BorrowedBooks WHERE user_id = $1 ', [user_id]);
+   const userBorrowedBooks = await queryDatabase('SELECT * FROM checkouts_by_title WHERE user_id = $1 ', [user_id]);
    remainingBook.data = userBorrowedBooks;
 
    if (userBorrowedBooks.length === 0) {
-     return res.status(404).json({ message: "All the borrowed books are returened" });
+     return res.status(404).json({ message: "All the borrowed books are returned" });
    }
 
    // Update the Books table to mark the book as not borrowed
