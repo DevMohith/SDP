@@ -11,6 +11,9 @@ logs
 # Ignore .env files
 .env
 
+# Environment variables
+.env
+
 # Ignore tags
 tags
 tags.lock
