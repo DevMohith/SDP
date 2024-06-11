@@ -16,6 +16,9 @@ keycloak.init({ onLoad: 'check-sso' }).then((authenticated) => {
     // Set the initial token for Axios
     axios.defaults.headers.common['Authorization'] = `Bearer ${keycloak.token}`;
 
+    // Make Keycloak available globally
+    app.config.globalProperties.$keycloak = keycloak;
+
     app.use(router);
     app.use(vuetify);
     app.use(store);  // Adding Vuex store to the app

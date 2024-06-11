@@ -1,9 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import BookList from '../views/BookList.vue'
+import BorrowedBooks from '../views/BorrowedBooks.vue'  // Import BorrowedBooks component
 import UploadEvent from '../views/UploadEvent.vue'
 import EditBook from '../views/EditBook.vue'
 import UploadGallery from '../views/UploadGallery.vue'
 import UploadEventImages from '../views/UploadEventImages.vue'
+import AdvancedSearch from '../views/AdvancedSearch.vue'
 //import keycloak from '../keycloak'
 
 const routes = [
@@ -11,6 +13,16 @@ const routes = [
     path: '/',
     name: 'BookList',
     component: BookList
+  },
+  {
+    path: '/advanced-search',
+    name: 'AdvancedSearch',
+    component: AdvancedSearch
+  },
+  {
+    path: '/borrowed-books',  // Add route for BorrowedBooks
+    name: 'BorrowedBooks',
+    component: BorrowedBooks
   },
   {
     path: '/event/info',
@@ -36,18 +48,9 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(process.env.BASE_URL),
   routes
 })
-
-//// Protect all routes
-//router.beforeEach((to, from, next) => {
-  //if (keycloak.authenticated) {
-    //next()
-  //} else {
-    //keycloak.login()
-  //}
-//})
 
 export default router
 

@@ -2,18 +2,20 @@ const express = require("express");
 const { Pool } = require("pg");
 const app = express();
 const port = 3000;
+const cors = require("cors"); // Import cors package
 
 const $book = require("./Book.js");
 
 // Middleware to parse JSON requests
+ app.use(cors());
 app.use(express.json());
 
 // PostgreSQL connection setup
 const pool = new Pool({
-  user: "postgres",
+  user: "sdp",
   host: "localhost",
-  database: "SDP",
-  password: "root",
+  database: "postgres",
+  password: "sdp",
   port: 5432,
 });
 
@@ -405,23 +407,23 @@ app.get("/books/search", async (req, res) => {
 
   switch (type.toUpperCase()) {
     case "ALL":
-      query = "SELECT * FROM Books WHERE title ILIKE $1 OR author ILIKE $1 OR genre ILIKE $1 OR publisher ILIKE $1 OR isbn ILIKE $1";
+      query = "SELECT * FROM library_collection_inventory WHERE title ILIKE $1 OR author ILIKE $1 OR genre ILIKE $1 OR publisher ILIKE $1 OR isbn ILIKE $1";
       values = [`%${search}%`];
       break;
     case "TITLE":
-      query = "SELECT * FROM Books WHERE title ILIKE $1";
+      query = "SELECT * FROM library_collection_inventory WHERE title ILIKE $1";
       values = [`%${search}%`];
       break;
     case "AUTHOR":
-      query = "SELECT * FROM Books WHERE author ILIKE $1";
+      query = "SELECT * FROM library_collection_inventory WHERE author ILIKE $1";
       values = [`%${search}%`];
       break;
     case "PUBLISHER":
-      query = "SELECT * FROM Books WHERE publisher ILIKE $1";
+      query = "SELECT * FROM library_collection_inventory WHERE publisher ILIKE $1";
       values = [`%${search}%`];
       break;
     case "ISBN":
-      query = "SELECT * FROM Books WHERE isbn ILIKE $1";
+      query = "SELECT * FROM library_collection_inventory WHERE isbn ILIKE $1";
       values = [`%${search}%`];
       break;
     default:
