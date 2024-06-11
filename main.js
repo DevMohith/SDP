@@ -214,6 +214,35 @@ app.post("/borrowBook", async (req, res) => {
   }
 });
 
+app.post("/adminControl/getBorrowedBooks", async (req, res) => {
+  const { userId } = req.body;
+
+  // Validating input
+  if (!userId) {
+    return res.status(400).json({
+      message: "User ID is required",
+    });
+  }
+
+  try {
+    // Query the database to retrieve borrowed books
+    const result = await queryDatabase(
+      "SELECT * FROM BORROWED_BOOKS WHERE USER_ID = $1",
+      [userId]
+    );
+    if (result.length === 0) {
+      return res.status(404).json({
+        message: "No borrowed books found for this user",
+      });
+    }
+    res.status(200).json({ borrowedBooks: result });
+  } catch (error) {
+    console.error("Error executing query", error.stack);
+    res.status(500).send("Error executing query");
+  }
+});
+
+
 
 /**********************************************************************************************************************************/
 
