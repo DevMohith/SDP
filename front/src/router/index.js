@@ -6,7 +6,8 @@ import EditBook from '../views/EditBook.vue'
 import UploadGallery from '../views/UploadGallery.vue'
 import UploadEventImages from '../views/UploadEventImages.vue'
 import AdvancedSearch from '../views/AdvancedSearch.vue'
-//import keycloak from '../keycloak'
+//import BorrowedBooksList from '../views/BorrowedBooksList.vue'  // Import BorrowedBooksList component
+import BookProfile from '../views/BookProfile.vue'  // Import BookProfile component
 
 const routes = [
   {
@@ -20,7 +21,7 @@ const routes = [
     component: AdvancedSearch
   },
   {
-    path: '/borrowed-books',  // Add route for BorrowedBooks
+    path: '/borrowed-books',
     name: 'BorrowedBooks',
     component: BorrowedBooks
   },
@@ -45,6 +46,17 @@ const routes = [
     name: 'UploadEventImages',
     component: UploadEventImages
   },
+  //{
+    //path: '/borrowed-books-list',  // Add route for BorrowedBooksList
+    //name: 'BorrowedBooksList',
+    //component: BorrowedBooksList
+  //},
+  {
+    path: '/book-profile/:id',
+    name: 'BookProfile',
+    component: BookProfile,
+    props: route => ({ book: route.params.book })
+  }
 ]
 
 const router = createRouter({

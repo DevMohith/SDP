@@ -6,9 +6,10 @@
       :items="borrowedBooks"
       item-key="isbn"
       class="elevation-1"
+      @click:row="viewBookDetails"
     >
       <template v-slot:item="{ item }">
-        <tr>
+        <tr @click="viewBookDetails(item)">
           <td>{{ item.title }}</td>
           <td>{{ item.author }}</td>
           <td>{{ item.isbn }}</td>
@@ -22,7 +23,7 @@
 
 <script>
 import axios from 'axios';
-import { mapGetters } from 'vuex';
+//import { mapGetters } from 'vuex';
 
 export default {
   data() {
@@ -37,30 +38,35 @@ export default {
       borrowedBooks: []
     };
   },
-  computed: {
-    ...mapGetters(['userInfo'])
-  },
+//  computed: {
+//    ...mapGetters(['userInfo'])
+//  },
   methods: {
-    async fetchBorrowedBooks() {
-      try {
-        const userId = this.userInfo.sub;  // Access the user ID from Vuex store
-        const keycloak = this.$keycloak;
+     async fetchBorrowedBooks() {
+//      console.log(this.$store.state.userInfo);
+      const userId = this.$store.state.userInfo.sub;
+      const keycloak = this.$keycloak;
 
-        // Fetch borrowed books using the user ID
-        const response = await axios.get('/adminControl/getBorrowedBooks', {
-          params: { userid: userId },
-          headers: {
-            Authorization: `Bearer ${keycloak.token}`
-          }
-        });
-
-        this.borrowedBooks = response.data.data;
-      } catch (error) {
+      axios.post('http://localhost:3000/adminControl/getBorrowedBooks', { userId }, {
+        headers: {
+          Authorization: `Bearer ${keycloak.token}`
+        }
+      })
+      .then(response => {
+        this.borrowedBooks = response.data.borrowedBooks;
+        console.log("Borrowed Books are:", this.borrowedBooks);
+      })
+      .catch(error => {
         console.error('Error fetching borrowed books:', error);
-      }
+      });
+    },
+    viewBookDetails(book) {
+      console.log("Viewing book details:", book);
+      const bookQuery = encodeURIComponent(JSON.stringify(book));
+      this.$router.push({ path: `/book-profile/${book._id}`, query: { book: bookQuery } });
     }
   },
-  created() {
+  mounted() {
     this.fetchBorrowedBooks();
   }
 };
