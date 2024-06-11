@@ -227,7 +227,7 @@ app.post("/adminControl/getBorrowedBooks", async (req, res) => {
   try {
     // Query the database to retrieve borrowed books
     const result = await queryDatabase(
-      "SELECT * FROM BORROWED_BOOKS WHERE USER_ID = $1",
+      "SELECT * FROM checkouts_by_title WHERE USER_ID = $1",
       [userId]
     );
     if (result.length === 0) {
