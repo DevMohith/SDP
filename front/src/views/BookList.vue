@@ -40,6 +40,7 @@ export default {
       try {
         const response = await axios.get('http://localhost:3000/get_books');
         this.books = response.data.data;
+        console.log("book list updated");
       } catch (error) {
         console.error('Error fetching books:', error);
       }
@@ -47,8 +48,10 @@ export default {
     goToAdvancedSearch() {
       this.$router.push('/advanced-search');
     },
-    resetSearch() {
+    async resetSearch() {
+      console.log("called");
       // Implement your reset search logic here
+      await this.fetchBooks();
     },
     goToBorrowedBooks() {
       this.$router.push('/borrowed-books');
@@ -58,7 +61,11 @@ export default {
     }
   },
   created() {
-    this.fetchBooks();
+    console.log(this.$store.state.isSearch);
+    if(!this.$store.state.isSearch)
+      this.fetchBooks();
+    else
+      this.books=this.$store.state.searchResults.data;
   }
 };
 </script>
