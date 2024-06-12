@@ -323,7 +323,7 @@ app.post("/borrowBook", async (req, res) => {
     try {
       //Check if the book is available (not checked out)
       const result = await queryDatabase(
-        "INSERT INTO checkouts_by_title (checkedout, title, author, subjects, publisher, publicationyear, user_id, bibnum, checkouttime, checkintime) SELECT true, lci.title, lci.author, lci.subjects, lci.publisher, lci.publisheryear, $1, lci.bibnum, current_timestamp, current_timestamp + interval '14 days' FROM library_collection_inventory lci LEFT JOIN checkouts_by_title cbt ON lci.bibnum = $2 WHERE lci.bibnum = $2 RETURNING *",
+        "INSERT INTO checkouts_by_title (checkedout, title, author, subjects, publisher, publicationyear, user_id, bibnum, checkouttime, checkintime) SELECT true, lci.title, lci.author, lci.subjects, lci.publisher, lci.publicationyear, $1, lci.bibnum, current_timestamp, current_timestamp + interval '14 days' FROM library_collection_inventory lci LEFT JOIN checkouts_by_title cbt ON lci.bibnum = $2 WHERE lci.bibnum = $2 RETURNING *",
         [user_id,bibnum]
       );
       book.data = result;
