@@ -200,22 +200,22 @@ else{
 //endpoint to update bookdetails with id for admin.
 
 app.post('/adminControl/updateBook/:id', async (req, res) => {
-  const { id } = req.params;
+   const { id } = req.params;
   const bookId = parseInt(id, 10);
-  const { bibnum, title, author, isbn, publicationyear, publisher, subjects, itemcollection, floatingitem, itemlocation, reportdate, itemcount} =
+  const {title, author, isbn, publicationyear, publisher, subjects, itemcollection, floatingitem, itemlocation, reportdate, itemcount} =
     req.body; 
-    if(req.user.groups[0]==!admin){
+    if(req.user.usergroup==!admin){
       res.status(403).send("Forbidden.");}
     else{
     //validating data
-  if (!bibnum || !title || !author || !isbn || !publicationyear || !publisher || !subjects || !itemcollection || !floatingitem || !itemlocation|| !reportdate || !itemcount) {
+  if (!title || !author || !isbn || !publicationyear || !publisher || !subjects || !itemcollection || !floatingitem || !itemlocation|| !reportdate || !itemcount) {
     return res.status(400).json({ message: 'All fields are required' });
   }
   var updatedBook = {};
   try {
     const result = await queryDatabase(
-      'UPDATE library_collection_inventory SET bibnum=$1, title=$2, author=$3, isbn=$4, publicationyear=$5, publisher=$6, subjects=$7, itemcollection=$8, floatingitem=$9, itemlocation=$10, reportdate=$11, itemcount=$12 WHERE bibnum=$13 RETURNING *',
-      [bibnum, title, author, isbn, publicationyear, publisher, subjects, itemcollection, floatingitem, itemlocation, reportdate, itemcount, bookId]
+      'UPDATE library_collection_inventory SET title=$1, author=$2, isbn=$3, publicationyear=$4, publisher=$5, subjects=$6, itemcollection=$7, floatingitem=$8, itemlocation=$9, reportdate=$10, itemcount=$11 WHERE bibnum=$12 RETURNING *',
+      [title, author, isbn, publicationyear, publisher, subjects, itemcollection, floatingitem, itemlocation, reportdate, itemcount, bookId]
     );
     if (result.length === 0) return res.status(404).json({ message: 'Book not found' });
     updatedBook.data = result;
