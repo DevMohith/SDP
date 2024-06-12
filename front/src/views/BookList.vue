@@ -29,7 +29,8 @@ export default {
       headers: [
         { text: 'Title', value: 'title' },
         { text: 'Author', value: 'author' },
-        { text: 'ISBN', value: 'isbn' }
+        { text: 'ISBN', value: 'isbn' },
+        { text: 'Bib Number', value: 'bibnum', hidden: true } // Add the bibnum field and mark it as hidden
       ],
       books: []
     };
@@ -53,7 +54,7 @@ export default {
       this.$router.push('/borrowed-books');
     },
     viewBook(item) {
-      this.$router.push(`/book/${item.isbn}`);
+      this.$router.push(`/book/${item.bibnum}`);
     }
   },
   created() {
