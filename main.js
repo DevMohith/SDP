@@ -261,6 +261,35 @@ app.delete("/adminControl/removeBook/:bibnum", async (req, res) => {
 });
 
 
+//app.post("/adminControl/removeBook", async (req, res) => {
+  //const { bibnum, title, author, isbn, publicationyear, publisher, subjects, itemtype, itemcollection, floatingitem, itemlocation, reportdate, itemcount } =
+    //req.body;
+  //// vaidating input
+  //if (!bibnum || !title || !author || !isbn || !publicationyear || !publisher || !subjects || !itemtype || !itemcollection || !floatingitem || !itemlocation || !reportdate || !itemcount) {
+    //return res
+      //.status(400)
+      //.json({
+        //message:
+          //"Any Input Is Required",
+      //});
+  //}
+  //var book = {};
+  //try {
+    ////query the database to add new book
+    //const result = await queryDatabase(
+      //"DELETE FROM LIBRAR_COLLECTION_INVENTORY WHERE (BIBNUM = $1 OR TITLE = $2 OR AUTHOR = $3 OR ISBN = $4 OR PUBLICATIONYEAR = $5 OR PUBLISHER = $6 OR SUBJECTS = $7 OR ITEMTYPE = $8 OR ITEMCOLLECTION = $9 OR FLOATINGITEM = $10 OR ITEMLOCATION = $11 OR REPORTDATE = $12 OR ITEMCOUNT = $13) RETURNING *",
+      //[bibnum, title, author, isbn, publicationyear, publisher, subjects, itemtype, itemcollection, floatingitem, itemlocation, reportdate, itemcount]
+    //);
+    //book.data = result;
+  //} catch (error) {
+    //console.error("Error executing query", error.stack);
+    //res.status(500).send("Error executing query");
+    //return;
+  //}
+  //res.status(200).json(book);
+  ////res.status(201).json({ message: 'Book added successfully', book: result[0] });
+//});
+
 app.post("/borrowBook", async (req, res) => {
   const { bibnum, user_id } = req.body;
 
@@ -278,7 +307,6 @@ app.post("/borrowBook", async (req, res) => {
       //Check if the book is available (not checked out)
       const result = await queryDatabase(
         "SELECT checkedout FROM checkouts_by_title WHERE bibnum = $1 and checkedout=true RETURNING *",
-        [checkedout]
       );
       book.data = result;
       const isCheckedOut = book.rows[0].checkedout;
@@ -297,7 +325,7 @@ app.post("/borrowBook", async (req, res) => {
       //Check if the book is available (not checked out)
       const result = await queryDatabase(
         "INSERT INTO checkouts_by_title (checkedout, title, author, subjects, publisher, publicationyear, user_id, bibnum, checkouttime, checkintime) SELECT true, lci.title, lci.author, lci.subjects, lci.publisher, lci.publisheryear, $1, lci.bibnum, current_timestamp, current_timestamp + interval '14 days' FROM library_collection_inventory lci LEFT JOIN checkouts_by_title cbt ON lci.bibnum = $2 WHERE lci.bibnum = $2 RETURNING *",
-        [checkedout,title,author,subjects,publisher,publicationyear,user_id,bibnum,checkouttime,checkintime]
+        [user_id,bibnum]
       );
       book.data = result;
     } catch (error) {
@@ -334,7 +362,7 @@ app.post("/adminControl/getBorrowedBooks", async (req, res) => {
   try {
     // Query the database to retrieve borrowed books
     const result = await queryDatabase(
-      "SELECT * FROM checkouts_by_title WHERE USER_ID = $1 AND CHECKEDOUT='true'",
+      "SELECT * FROM checkouts_by_title WHERE USER_ID = $1 AND CHECKEDOUT=true",
       [userId]
     );
     if (result.length === 0) {
