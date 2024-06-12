@@ -185,7 +185,7 @@ app.post("/adminControl/removeBook", async (req, res) => {
   //res.status(201).json({ message: 'Book added successfully', book: result[0] });
 });
 
-app.post("/borrowBook", async (req, res) => {
+app.post("adminControl/borrowBook", async (req, res) => {
   const { bibnum, user_id } = req.body;
 
   // Validate input data
@@ -195,15 +195,44 @@ app.post("/borrowBook", async (req, res) => {
       .json({ message: "Missing required fields: bibnum, user_id" });
   }
 
-  try {
-    // Check book availability
-    const available = await isBookAvailable(bibnum);
-    if (!available) {
-      return res.status(400).json({ message: "Book is not currently available" });
+  var book = {};
+
+    //const checkBookResult = await queryDatabase(checkBookQuery, [bibnum]);
+    try {
+      //Check if the book is available (not checked out)
+      const result = await queryDatabase(
+        "SELECT checkedout FROM checkouts_by_title WHERE bibnum = $1 and checkedout=true RETURNING *",
+        [checkedout]
+      );
+      book.data = result;
+      const isCheckedOut = book.rows[0].checkedout;
+
+    if (isCheckedOut) {
+      return res.status(400).json({ message: 'Book is already checked out' });
+    }
+    } catch (error) {
+      console.error("Error executing query", error.stack);
+      res.status(500).send("Error executing query");
+      return;
     }
 
     // Borrow the book
-    const borrowResult = await borrowBook(bibnum, user_id);
+    try {
+      //Check if the book is available (not checked out)
+      const result = await queryDatabase(
+        "INSERT INTO checkouts_by_title (checkedout, title, author, subjects, publisher, publicationyear, user_id, bibnum, checkouttime, checkintime) SELECT true, lci.title, lci.author, lci.subjects, lci.publisher, lci.publisheryear, $1, lci.bibnum, current_timestamp, current_timestamp + interval '14 days' FROM library_collection_inventory lci LEFT JOIN checkouts_by_title cbt ON lci.bibnum = $2 WHERE lci.bibnum = $2 RETURNING *",
+        [checkedout,title,author,subjects,publisher,publicationyear,user_id,bibnum,checkouttime,checkintime]
+      );
+      book.data = result;
+    } catch (error) {
+      console.error("Error executing query", error.stack);
+      res.status(500).send("Error executing query");
+      return;
+    }
+    res.status(200).json(book);
+
+
+    /*const borrowResult = await borrowBook(bibnum, user_id);
     if (!borrowResult) {
       return res.status(500).json({ message: "Error borrowing book" });
     }
@@ -213,7 +242,7 @@ app.post("/borrowBook", async (req, res) => {
   } catch (error) {
     console.error("Error borrowing book:", error);
     return res.status(500).json({ message: "Internal Server Error" });
-  }
+  }*/
 });
 
 app.post("/adminControl/getBorrowedBooks", async (req, res) => {
@@ -229,7 +258,7 @@ app.post("/adminControl/getBorrowedBooks", async (req, res) => {
   try {
     // Query the database to retrieve borrowed books
     const result = await queryDatabase(
-      "SELECT * FROM checkouts_by_title WHERE USER_ID = $1 AND CHECKOUT='true'",
+      "SELECT * FROM checkouts_by_title WHERE USER_ID = $1 AND CHECKEDOUT='true'",
       [userId]
     );
     if (result.length === 0) {
