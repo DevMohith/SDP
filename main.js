@@ -136,16 +136,19 @@ app.get('/get_books', async (req, res) => {
 app.get("/get_books/:id", async (req, res) => { 
   const { id } = req.params;
   const bookId = parseInt(id, 10);
+  //const bookId
   if (isNaN(bookId)) {
     return res.status(400).json({ message: "Invalid book ID" });
   }
   var book = {};
   try {
+
+ //returnres.status(400).json({ message: "Invalid book ID" });
+  //} var book= {bibnum};
+
     //query the database to get particular book
     const result = await queryDatabase(
-    //dear gagan you didn't defined the id's title in Database coloumn, so i am unable to get the particular book with id////
-    //we Didn't defined the id's title in Database coloumn, so i am unable to get the particular book with id////
-    //so i just tried with the bibnum=$1 by replacing id=$1///////
+      //const result = await queryDatabase(
       "SELECT * FROM library_collection_inventory WHERE bibnum=$1",
       [bookId]
     );
@@ -156,6 +159,7 @@ app.get("/get_books/:id", async (req, res) => {
   } catch (error) {
     console.error("Error executing query to get particular book", error.stack);
     res.status(500).send("Error executing query to get particular book");
+    //res.statuserror
     return;
   }
   res.status(200).json(book);
