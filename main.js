@@ -3,13 +3,9 @@ const { Pool } = require("pg");
 const app = express();
 const port = 3000;
 const cors = require("cors"); // Import cors package
-const axios = require('axios');
-
-
-// Handle CORS preflight requests
-app.options('*', cors());  // Enable preflight requests for all routes
 
 const $book = require("./Book.js");
+
 //
 //
 //
@@ -78,6 +74,7 @@ app.use(userInfoMiddleware);
 
 // Apply the middleware to all routes
 //app.use(userInfoMiddleware);
+
 
 // Middleware to parse JSON requests
  app.use(cors());
@@ -166,7 +163,7 @@ app.get("/get_books/:id", async (req, res) => {
 app.post("/adminControl/addBook", async (req, res) => {
   const { bibnum, title, author, isbn, publicationyear, publisher, subjects, itemcollection, floatingitem, itemlocation, reportdate, itemcount} =
     req.body;  
-if(req.user.groups[0]==!admin){
+if($user.groups[0]==!admin){
   res.status(403).send("Forbidden.");}
 else{
   // validating input
@@ -200,22 +197,22 @@ else{
 //endpoint to update bookdetails with id for admin.
 
 app.post('/adminControl/updateBook/:id', async (req, res) => {
-  const { id } = req.params;
+   const { id } = req.params;
   const bookId = parseInt(id, 10);
-  const { bibnum, title, author, isbn, publicationyear, publisher, subjects, itemcollection, floatingitem, itemlocation, reportdate, itemcount} =
+  const {title, author, isbn, publicationyear, publisher, subjects, itemcollection, floatingitem, itemlocation, reportdate, itemcount} =
     req.body; 
-    if(req.user.groups[0]==!admin){
+    if(req.user.usergroup==!admin){    
       res.status(403).send("Forbidden.");}
     else{
     //validating data
-  if (!bibnum || !title || !author || !isbn || !publicationyear || !publisher || !subjects || !itemcollection || !floatingitem || !itemlocation|| !reportdate || !itemcount) {
+  if (!title || !author || !isbn || !publicationyear || !publisher || !subjects || !itemcollection || !floatingitem || !itemlocation|| !reportdate || !itemcount) {
     return res.status(400).json({ message: 'All fields are required' });
   }
   var updatedBook = {};
   try {
     const result = await queryDatabase(
-      'UPDATE library_collection_inventory SET bibnum=$1, title=$2, author=$3, isbn=$4, publicationyear=$5, publisher=$6, subjects=$7, itemcollection=$8, floatingitem=$9, itemlocation=$10, reportdate=$11, itemcount=$12 WHERE bibnum=$13 RETURNING *',
-      [bibnum, title, author, isbn, publicationyear, publisher, subjects, itemcollection, floatingitem, itemlocation, reportdate, itemcount, bookId]
+      'UPDATE library_collection_inventory SET title=$1, author=$2, isbn=$3, publicationyear=$4, publisher=$5, subjects=$6, itemcollection=$7, floatingitem=$8, itemlocation=$9, reportdate=$10, itemcount=$11 WHERE bibnum=$12 RETURNING *',
+      [title, author, isbn, publicationyear, publisher, subjects, itemcollection, floatingitem, itemlocation, reportdate, itemcount, bookId]
     );
     if (result.length === 0) return res.status(404).json({ message: 'Book not found' });
     updatedBook.data = result;
@@ -332,7 +329,7 @@ app.post("/adminControl/getBorrowedBooks", async (req, res) => {
   try {
     // Query the database to retrieve borrowed books
     const result = await queryDatabase(
-      "SELECT * FROM checkouts_by_title WHERE USER_ID = $1",
+      "SELECT * FROM checkouts_by_title WHERE USER_ID = $1 AND CHECKOUT='true'",
       [userId]
     );
     if (result.length === 0) {
@@ -415,6 +412,7 @@ app.post("/adminControl/getBorrowedBooks", async (req, res) => {
 
 
 app.post('/user/returnBook', async (req, res) => {
+
   const { book_id} = req.body;
  const user_id = req.user.sub;// Assuming Keycloak token has sub as user ID
   bibnum = book_id;
@@ -498,12 +496,14 @@ app.post("/user/extendBook", async (req, res) => {
 
 
 app.post("/user/extendBook", async (req, res) => {
+
   const { book_id} = req.body;
   const user_id = req.user.sub;
   bibnum = book_id;
 
+
   if (!bibnum || !user_id) {
-    return res.status(400).json({ message: "Both book_id and user_id are required" });
+    return res.status(400).json({ message: "Both bibnum and user_id are required" });
   }
 
   var book = {};
@@ -577,7 +577,7 @@ app.get("/books/search", async (req, res) => {
 
 // Start the server
 app.listen(port, () => {
-  console.log(`Express appp listening at http://localhost:${port}`);
+  console.log(`Express app listening at http://localhost:${port}`);
 });
 
 //getBooks -> get ID, Author, Title, Year, Publisher
