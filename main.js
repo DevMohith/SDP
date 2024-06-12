@@ -324,7 +324,7 @@ app.post("/borrowBook", async (req, res) => {
       //Check if the book is available (not checked out)
       const bookId = parseInt(bibnum, 10);
       const result = await queryDatabase(
-        "INSERT INTO checkouts_by_title (checkedout, title, author, subjects, publisher, publicationyear, user_id, bibnum, checkouttime, checkintime) SELECT true, lci.title, lci.author, lci.subjects, lci.publisher, lci.publicationyear, $1, lci.bibnum, current_timestamp, current_timestamp + interval '14 days' FROM library_collection_inventory lci LEFT JOIN checkouts_by_title cbt ON lci.bibnum = cbt.bibnum WHERE lci.bibnum = $2 RETURNING *",
+        "INSERT INTO checkouts_by_title (checkedout, title, author, subjects, publisher, publicationyear, user_id, bibnum, checkouttime, checkintime) SELECT true, lci.title, lci.author, lci.subjects, lci.publisher, lci.publicationyear, $1, lci.bibnum, current_timestamp, current_timestamp + interval '14 days' FROM library_collection_inventory lci LEFT JOIN checkouts_by_title cbt ON lci.bibnum = cbt.bibnum WHERE lci.bibnum(CAST AS INTEGER) = $2 RETURNING *",
         [user_id,bookId]
       );
       book.data = result;
@@ -335,8 +335,7 @@ app.post("/borrowBook", async (req, res) => {
     }
     res.status(200).json(book);
 
-
-    /*const borrowResult = await borrowBook(bibnum, user_id);
+  /*const borrowResult = await borrowBook(bibnum, user_id);
     if (!borrowResult) {
       return res.status(500).json({ message: "Error borrowing book" });
     }
@@ -377,6 +376,25 @@ app.post("/adminControl/getBorrowedBooks", async (req, res) => {
   }
 });
 
+
+app.post("/adminControl/getOverDue", async (req, res) => {
+
+  try {
+    // Query the database to retrieve borrowed books
+    const result = await queryDatabase(
+      "SELECT * FROM overdue_fines WHERE paid_status=false"
+    );
+    if (result.length === 0) {
+      return res.status(404).json({
+        message: "No Fines Due",
+      });
+    }
+    res.status(200).json({ borrowedBooks: result });
+  } catch (error) {
+    console.error("Error executing query", error.stack);
+    res.status(500).send("Error executing query");
+  }
+});
 
 
 /**********************************************************************************************************************************/
