@@ -93,7 +93,7 @@ app.get("/get_books/:id", async (req, res) => {
 app.post("/adminControl/addBook", async (req, res) => {
   const { bibnum, title, author, isbn, publicationyear, publisher, subjects, itemcollection, floatingitem, itemlocation, reportdate, itemcount} =
     req.body;  
-if($user.groups[0]==!admin){
+if(req.user.usergroup=!admin){
   res.status(403).send("Forbidden.");}
 else{
   // validating input
@@ -131,7 +131,7 @@ app.post('/adminControl/updateBook/:id', async (req, res) => {
   const bookId = parseInt(id, 10);
   const {title, author, isbn, publicationyear, publisher, subjects, itemcollection, floatingitem, itemlocation, reportdate, itemcount} =
     req.body; 
-    if(req.user.usergroup==!admin){    
+    if(req.user.usergroup=!admin){    
       res.status(403).send("Forbidden.");}
     else{
     //validating data
