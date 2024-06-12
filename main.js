@@ -143,12 +143,8 @@ app.get("/get_books/:id", async (req, res) => {
   var book = {};
   try {
 
- //returnres.status(400).json({ message: "Invalid book ID" });
-  //} var book= {bibnum};
-
     //query the database to get particular book
     const result = await queryDatabase(
-      //const result = await queryDatabase(
       "SELECT * FROM library_collection_inventory WHERE bibnum=$1",
       [bookId]
     );
@@ -159,7 +155,6 @@ app.get("/get_books/:id", async (req, res) => {
   } catch (error) {
     console.error("Error executing query to get particular book", error.stack);
     res.status(500).send("Error executing query to get particular book");
-    //res.statuserror
     return;
   }
   res.status(200).json(book);
