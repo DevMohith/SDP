@@ -3,7 +3,11 @@ const { Pool } = require("pg");
 const app = express();
 const port = 3000;
 const cors = require("cors"); // Import cors package
+const axios = require('axios');
 
+
+
+app.options('*', cors());  // Enable preflight requests for all routes
 const $book = require("./Book.js");
 
 //
@@ -163,7 +167,7 @@ app.get("/get_books/:id", async (req, res) => {
 app.post("/adminControl/addBook", async (req, res) => {
   const { bibnum, title, author, isbn, publicationyear, publisher, subjects, itemcollection, floatingitem, itemlocation, reportdate, itemcount} =
     req.body;  
-if(req.user.usergroup=!admin){
+if(req.user.usergroup=!'admin'){
   res.status(403).send("Forbidden.");}
 else{
   // validating input
@@ -201,13 +205,14 @@ app.post('/adminControl/updateBook/:id', async (req, res) => {
   const bookId = parseInt(id, 10);
   const {title, author, isbn, publicationyear, publisher, subjects, itemcollection, floatingitem, itemlocation, reportdate, itemcount} =
     req.body; 
-    if(req.user.usergroup=!admin){    
+    if(req.user.usergroup=!'admin'){    
       res.status(403).send("Forbidden.");}
     else{
     //validating data
-  if (!title || !author || !isbn || !publicationyear || !publisher || !subjects || !itemcollection || !floatingitem || !itemlocation|| !reportdate || !itemcount) {
-    return res.status(400).json({ message: 'All fields are required' });
-  }
+  //if (!title || !author || !isbn || !publicationyear || !publisher || !subjects || !itemcollection || !floatingitem || !itemlocation|| !reportdate || !itemcount) {
+    //return res.status(400).json({ message: 'All fields are required' }
+      //);
+  //}
   var updatedBook = {};
   try {
     const result = await queryDatabase(

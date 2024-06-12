@@ -13,7 +13,9 @@
         <tr @click="viewBook(item)">
           <td>{{ item.title }}</td>
           <td>{{ item.author }}</td>
-          <td>{{ item.isbn }}</td>
+          <td>{{ item.publisher }}</td>
+          <td>{{ item.publicationyear }}</td>
+          <td>{{ item.bibnum }}</td>
         </tr>
       </template>
     </v-data-table>
@@ -27,10 +29,11 @@ export default {
   data() {
     return {
       headers: [
-        { text: 'Title', value: 'title' },
-        { text: 'Author', value: 'author' },
-        { text: 'ISBN', value: 'isbn' },
-        { text: 'Bib Number', value: 'bibnum', hidden: true } // Add the bibnum field and mark it as hidden
+        { title: 'Title', value: 'title' },
+        { title: 'Author', value: 'author' },
+        { title: 'Publisher', value: 'publisherr' },
+        { title: 'Publication Year', value: 'publicationyear' },
+        { title: 'bibnum', value: 'bibnum'} // Add the bibnum field and mark it as hidden
       ],
       books: []
     };
