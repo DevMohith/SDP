@@ -37,6 +37,7 @@ export default {
     },
     updateBook() {
       const id = this.$route.params.id;
+      console.log(this.book);
       axios.post(`http://localhost:3000/adminControl/updateBook/${id}`, this.book)
         .then(() => {
           this.$router.push('/');
