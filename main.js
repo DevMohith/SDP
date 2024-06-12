@@ -415,48 +415,10 @@ app.post("/adminControl/getOverDue", async (req, res) => {
   //res.status(200).json(users);
 //});
 
-//endpoint to get user by ID
-//app.get('/adminControl/user/:id', async (req, res) => {
-  //const { id } = req.params;
-  //const userId = parseInt(id, 10);
-  //if (isNaN(userId)) {
-    //return res.status(400).json({ message: "Invalid user id" });
-  //}
-  //var user = {};
-
-  //try {
-    ////query the database to get user with id
-    //const result = await queryDatabase("SELECT id, username, is_admin, created_at FROM Users WHERE id=$1", [userId]);
-
-  //if (result.length === 0) {
-    //return res.status(404).json({message: "user not found"});
-  //}
-    //user.data = result;
-  //} catch (error) {
-    //console.error("Error executing query to get particular user", error.stack);
-    //res.status(500).send("Error executing query to get particular user");
-    //return;
-  //}
-
-  ////send back whatever is in 
-  //res.status(200).json(user);
-//});
 
 /************************************************************************************************************************************* */
 
-//try {
-//query the database to get all books
-//const result = await queryDatabase('UPDATE Books set title=$1 where id=$2', [title,id]);
-//t.data = result;
-//} catch (error) {
-// console.error('Error executing query', error.stack);
-// res.status(500).send('Error executing query');
-// return;
-//}
-//
-//
-//
-//
+
 
 ////Arnav Workspace////
 
@@ -516,34 +478,7 @@ app.post('/user/returnBook', async (req, res) => {
 
 
 
-//Arvind Workspace
-
-/*
-app.post("/user/extendBook", async (req, res) => {
-  const { book_id, user_id } = req.body;
-  if (!book_id || !user_id) {
-    return res.status(400).json({ message: "All fields are required" });
-  }
-  var book = {};
-  try {
-    const result = await queryDatabase(
-      "UPDATE BorrowedBooks SET extended=true WHERE book_id=$1 AND user_id=$2 RETURNING *",
-      [book_id, user_id]
-    );
-    book.data = result;
-  } catch (error) {
-    console.error("Error executing query", error.stack);
-    res.status(500).send("Error executing query");
-    return;
-  }
-  res.status(200).json(book);
-});
-*/
-
-
-
-//Arvind Workspace
-
+//Arvind workspace
 
 app.post("/user/extendBook", async (req, res) => {
 
