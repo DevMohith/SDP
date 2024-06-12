@@ -131,11 +131,7 @@ app.post('/adminControl/updateBook/:id', async (req, res) => {
   const bookId = parseInt(id, 10);
   const {title, author, isbn, publicationyear, publisher, subjects, itemcollection, floatingitem, itemlocation, reportdate, itemcount} =
     req.body; 
-<<<<<<< HEAD
-    if(req.user.usergroup==!admin){
-=======
-    if($user.groups[0]==!admin){
->>>>>>> b407f29616fdfff55cbfe2943d6655257a45d9eb
+    if(req.user.usergroup==!admin){    
       res.status(403).send("Forbidden.");}
     else{
     //validating data
