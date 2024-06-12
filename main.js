@@ -169,26 +169,26 @@ app.get("/get_books/:id", async (req, res) => {
 //endpoint to add a new book for admin
 
 app.post("/adminControl/addBook", async (req, res) => {
-  const { bibnum, title, author, isbn, publicationyear, publisher, subjects, itemcollection, floatingitem, itemlocation, reportdate, itemcount} =
+  const { bibnum, title, author, isbn, publicationyear, publisher, subjects, floatingitem, reportdate} =
     req.body;  
 if(req.user.usergroup=!'admin'){
   res.status(403).send("Forbidden.");}
 else{
   // validating input
-  if (!bibnum || !title || !author || !isbn || !publicationyear || !publisher || !subjects || !itemcollection || !floatingitem || !itemlocation|| !reportdate || !itemcount) {
+  if (!bibnum || !title || !author || !isbn || !publicationyear || !publisher || !subjects || !floatingitem || !reportdate) {
     return res
       .status(400)
       .json({
         message:
-          "All fields are required: bibnum, title, author, isbn, publicationyear, publisher, subjects, itemcollection, floatingitem, itemlocation, reportdate, itemcount",
+          "All fields are required: bibnum, title, author, isbn, publicationyear, publisher, subjects, floatingitem, reportdate",
       });
   }
   var book = {};
   try {
     //query the database to add new book
     const result = await queryDatabase(
-      "INSERT INTO library_collection_inventory (bibnum, title, author, isbn, publicationyear, publisher, subjects, itemcollection, floatingitem, itemlocation, reportdate, itemcount) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *",
-      [bibnum, title, author, isbn, publicationyear, publisher, subjects, itemcollection, floatingitem, itemlocation, reportdate, itemcount]
+      "INSERT INTO library_collection_inventory (bibnum, title, author, isbn, publicationyear, publisher, subjects, floatingitem, reportdate,) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",
+      [bibnum, title, author, isbn, publicationyear, publisher, subjects, floatingitem, reportdate,]
     );
     book.data = result;
   } catch (error) {
