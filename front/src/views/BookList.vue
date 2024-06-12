@@ -29,7 +29,8 @@ export default {
       headers: [
         { text: 'Title', value: 'title' },
         { text: 'Author', value: 'author' },
-        { text: 'ISBN', value: 'isbn' }
+        { text: 'ISBN', value: 'isbn' },
+        { text: 'Bib Number', value: 'bibnum', hidden: true } // Add the bibnum field and mark it as hidden
       ],
       books: []
     };
@@ -39,6 +40,7 @@ export default {
       try {
         const response = await axios.get('http://localhost:3000/get_books');
         this.books = response.data.data;
+        console.log("book list updated");
       } catch (error) {
         console.error('Error fetching books:', error);
       }
@@ -46,18 +48,24 @@ export default {
     goToAdvancedSearch() {
       this.$router.push('/advanced-search');
     },
-    resetSearch() {
+    async resetSearch() {
+      console.log("called");
       // Implement your reset search logic here
+      await this.fetchBooks();
     },
     goToBorrowedBooks() {
       this.$router.push('/borrowed-books');
     },
     viewBook(item) {
-      this.$router.push(`/book/${item.isbn}`);
+      this.$router.push(`/book/${item.bibnum}`);
     }
   },
   created() {
-    this.fetchBooks();
+    console.log(this.$store.state.isSearch);
+    if(!this.$store.state.isSearch)
+      this.fetchBooks();
+    else
+      this.books=this.$store.state.searchResults.data;
   }
 };
 </script>

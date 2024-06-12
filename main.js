@@ -6,6 +6,76 @@ const cors = require("cors"); // Import cors package
 
 const $book = require("./Book.js");
 
+//
+//
+//
+// Middleware to fetch user info from Keycloak and attach to request
+const userInfoMiddleware = async (req, res, next) => {
+  // Skip token validation for OPTIONS requests
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);  // Respond to OPTIONS requests with 200 status
+  }
+
+  //console.log("Received headers:", req.headers); // Log all headers
+  const authHeader = req.headers['authorization'] || req.headers['Authorization'];
+  //console.log("Authorization header:", authHeader); // Log the Authorization header specifically
+
+  const token = authHeader && authHeader.split(' ')[1];
+  //console.log("Extracted token:", token); // Log the extracted token
+
+  if (!token) {
+    return res.status(401).json({ error: 'No token provided' });
+  }
+
+  try {
+    const response = await axios.get('https://sso.sexycoders.org/auth/realms/SDP-SRH-2024/protocol/openid-connect/userinfo', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+
+    req.user = response.data;
+    next();
+  } catch (error) {
+    console.error('Error fetching user info:', error);
+    return res.status(401).json({ error: 'Invalid token' });
+  }
+};
+
+// Apply the middleware to all routes
+app.use(userInfoMiddleware);
+
+//
+// Middleware to fetch user info from Keycloak and attach to request
+//const userInfoMiddleware = async (req, res, next) => {
+  //console.log(req); // Add this line to log headers
+    //console.log("Received headers:", req.headers); // Add this line to log headers
+  //const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
+  //console.log(token);
+
+//  if (!token) {
+//    return res.status(401).json({ error: 'No token provided' });
+//  }
+//
+//  try {
+//    const response = await axios.get('https://sso.sexycoders.org/auth/realms/SDP-SRH-2024/protocol/openid-connect/userinfo', {
+//      headers: {
+//        Authorization: `Bearer ${token}`
+//      }
+//    });
+//
+//    req.user = response.data;
+//    next();
+//  } catch (error) {
+//    console.error('Error fetching user info:', error);
+//    return res.status(401).json({ error: 'Invalid token' });
+//  }
+//};
+
+// Apply the middleware to all routes
+//app.use(userInfoMiddleware);
+
+
 // Middleware to parse JSON requests
  app.use(cors());
 app.use(express.json());
@@ -45,7 +115,7 @@ app.get('/get_books', async (req, res) => {
 
   try {
     //query the database to get all books
-    const result = await queryDatabase('SELECT title,author,isbn,publicationyear,publisher FROM library_collection_inventory limit 25', []);
+    const result = await queryDatabase('SELECT title,author,isbn,publicationyear,publisher,bibnum FROM library_collection_inventory limit 25', []);
     t.data = result;
   } catch (error) {
     console.error('Error executing query', error.stack);
@@ -93,7 +163,7 @@ app.get("/get_books/:id", async (req, res) => {
 app.post("/adminControl/addBook", async (req, res) => {
   const { bibnum, title, author, isbn, publicationyear, publisher, subjects, itemcollection, floatingitem, itemlocation, reportdate, itemcount} =
     req.body;  
-if($user.groups[0]==!admin){
+if(req.user.usergroup=!admin){
   res.status(403).send("Forbidden.");}
 else{
   // validating input
@@ -127,22 +197,22 @@ else{
 //endpoint to update bookdetails with id for admin.
 
 app.post('/adminControl/updateBook/:id', async (req, res) => {
-  const { id } = req.params;
+   const { id } = req.params;
   const bookId = parseInt(id, 10);
-  const { bibnum, title, author, isbn, publicationyear, publisher, subjects, itemcollection, floatingitem, itemlocation, reportdate, itemcount} =
+  const {title, author, isbn, publicationyear, publisher, subjects, itemcollection, floatingitem, itemlocation, reportdate, itemcount} =
     req.body; 
-    if($user.groups[0]==!admin){
+    if(req.user.usergroup=!admin){    
       res.status(403).send("Forbidden.");}
     else{
     //validating data
-  if (!bibnum || !title || !author || !isbn || !publicationyear || !publisher || !subjects || !itemcollection || !floatingitem || !itemlocation|| !reportdate || !itemcount) {
+  if (!title || !author || !isbn || !publicationyear || !publisher || !subjects || !itemcollection || !floatingitem || !itemlocation|| !reportdate || !itemcount) {
     return res.status(400).json({ message: 'All fields are required' });
   }
   var updatedBook = {};
   try {
     const result = await queryDatabase(
-      'UPDATE library_collection_inventory SET bibnum=$1, title=$2, author=$3, isbn=$4, publicationyear=$5, publisher=$6, subjects=$7, itemcollection=$8, floatingitem=$9, itemlocation=$10, reportdate=$11, itemcount=$12 WHERE bibnum=$13 RETURNING *',
-      [bibnum, title, author, isbn, publicationyear, publisher, subjects, itemcollection, floatingitem, itemlocation, reportdate, itemcount, bookId]
+      'UPDATE library_collection_inventory SET title=$1, author=$2, isbn=$3, publicationyear=$4, publisher=$5, subjects=$6, itemcollection=$7, floatingitem=$8, itemlocation=$9, reportdate=$10, itemcount=$11 WHERE bibnum=$12 RETURNING *',
+      [title, author, isbn, publicationyear, publisher, subjects, itemcollection, floatingitem, itemlocation, reportdate, itemcount, bookId]
     );
     if (result.length === 0) return res.status(404).json({ message: 'Book not found' });
     updatedBook.data = result;
@@ -156,24 +226,25 @@ app.post('/adminControl/updateBook/:id', async (req, res) => {
 });
 
 //Gagan Workspace
-app.post("/adminControl/removeBook", async (req, res) => {
-  const { bibnum, title, author, isbn, publicationyear, publisher, subjects, itemtype, itemcollection, floatingitem, itemlocation, reportdate, itemcount } =
-    req.body;
-  // vaidating input
-  if (!bibnum || !title || !author || !isbn || !publicationyear || !publisher || !subjects || !itemtype || !itemcollection || !floatingitem || !itemlocation || !reportdate || !itemcount) {
-    return res
-      .status(400)
-      .json({
-        message:
-          "Any Input Is Required",
-      });
+//
+//
+
+app.delete("/adminControl/removeBook/:bibnum", async (req, res) => {
+  const { bibnum } = req.params;
+
+  // Validating input
+  if (!bibnum) {
+    return res.status(400).json({
+      message: "Bibnum is required",
+    });
   }
+
   var book = {};
   try {
-    //query the database to add new book
+    // Query the database to remove the book
     const result = await queryDatabase(
-      "DELETE FROM LIBRAR_COLLECTION_INVENTORY WHERE (BIBNUM = $1 OR TITLE = $2 OR AUTHOR = $3 OR ISBN = $4 OR PUBLICATIONYEAR = $5 OR PUBLISHER = $6 OR SUBJECTS = $7 OR ITEMTYPE = $8 OR ITEMCOLLECTION = $9 OR FLOATINGITEM = $10 OR ITEMLOCATION = $11 OR REPORTDATE = $12 OR ITEMCOUNT = $13) RETURNING *",
-      [bibnum, title, author, isbn, publicationyear, publisher, subjects, itemtype, itemcollection, floatingitem, itemlocation, reportdate, itemcount]
+      "DELETE FROM LIBRARY_COLLECTION_INVENTORY WHERE BIBNUM = $1",
+      [bibnum]
     );
     book.data = result;
   } catch (error) {
@@ -182,10 +253,43 @@ app.post("/adminControl/removeBook", async (req, res) => {
     return;
   }
   res.status(200).json(book);
-  //res.status(201).json({ message: 'Book added successfully', book: result[0] });
 });
 
+<<<<<<< HEAD
 app.post("adminControl/borrowBook", async (req, res) => {
+=======
+
+//app.post("/adminControl/removeBook", async (req, res) => {
+  //const { bibnum, title, author, isbn, publicationyear, publisher, subjects, itemtype, itemcollection, floatingitem, itemlocation, reportdate, itemcount } =
+    //req.body;
+  //// vaidating input
+  //if (!bibnum || !title || !author || !isbn || !publicationyear || !publisher || !subjects || !itemtype || !itemcollection || !floatingitem || !itemlocation || !reportdate || !itemcount) {
+    //return res
+      //.status(400)
+      //.json({
+        //message:
+          //"Any Input Is Required",
+      //});
+  //}
+  //var book = {};
+  //try {
+    ////query the database to add new book
+    //const result = await queryDatabase(
+      //"DELETE FROM LIBRAR_COLLECTION_INVENTORY WHERE (BIBNUM = $1 OR TITLE = $2 OR AUTHOR = $3 OR ISBN = $4 OR PUBLICATIONYEAR = $5 OR PUBLISHER = $6 OR SUBJECTS = $7 OR ITEMTYPE = $8 OR ITEMCOLLECTION = $9 OR FLOATINGITEM = $10 OR ITEMLOCATION = $11 OR REPORTDATE = $12 OR ITEMCOUNT = $13) RETURNING *",
+      //[bibnum, title, author, isbn, publicationyear, publisher, subjects, itemtype, itemcollection, floatingitem, itemlocation, reportdate, itemcount]
+    //);
+    //book.data = result;
+  //} catch (error) {
+    //console.error("Error executing query", error.stack);
+    //res.status(500).send("Error executing query");
+    //return;
+  //}
+  //res.status(200).json(book);
+  ////res.status(201).json({ message: 'Book added successfully', book: result[0] });
+//});
+
+app.post("/borrowBook", async (req, res) => {
+>>>>>>> ef73ce2a66e89164ae20973720a1bc7cab5a4831
   const { bibnum, user_id } = req.body;
 
   // Validate input data
@@ -341,8 +445,10 @@ app.post("/adminControl/getBorrowedBooks", async (req, res) => {
 
 
 app.post('/user/returnBook', async (req, res) => {
-  const { bibnum} = req.body;
- const user_id = $user.sub;// Assuming Keycloak token has sub as user ID
+
+  const { book_id} = req.body;
+ const user_id = req.user.sub;// Assuming Keycloak token has sub as user ID
+  bibnum = book_id;
 
  if (!bibnum) {
    return res.status(400).json({ message: "Book ID is required" });
@@ -423,8 +529,11 @@ app.post("/user/extendBook", async (req, res) => {
 
 
 app.post("/user/extendBook", async (req, res) => {
-  const {bibnum} = req.body;
-  const user_id = $user.sub;
+
+  const { book_id} = req.body;
+  const user_id = req.user.sub;
+  bibnum = book_id;
+
 
   if (!bibnum || !user_id) {
     return res.status(400).json({ message: "Both bibnum and user_id are required" });
@@ -435,7 +544,7 @@ app.post("/user/extendBook", async (req, res) => {
   try {
     // Assuming extended is a boolean column in the BorrowedBooks table
     const result = await queryDatabase(
-      "UPDATE checkouts_by_title SET checkintime = checkintime + interval '14 days' WHERE bibnum=$1 AND user_id =$2; RETURNING *",
+      "UPDATE checkouts_by_title SET checkintime = checkintime + interval '14 days' WHERE bibnum=$1 AND user_id =$2 RETURNING *",
       [bibnum, user_id]
     );
     
