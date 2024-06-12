@@ -43,7 +43,7 @@ export default {
           }
         });
         this.$store.commit('setSearchResults', response.data);
-        this.$store.commit('setSearchActive');
+        this.$store.commit('setSearchActive',1);
         this.$router.push('/');
       } catch (error) {
         console.error("Error searching books:", error);
