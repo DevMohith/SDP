@@ -306,14 +306,13 @@ app.post("/borrowBook", async (req, res) => {
     try {
       //Check if the book is available (not checked out)
       const result = await queryDatabase(
-        "SELECT checkedout FROM checkouts_by_title WHERE bibnum = $1 and checkedout=true RETURNING *",
+        "SELECT checkedout FROM checkouts_by_title WHERE bibnum = $1 and checkedout=true",[bibnum]
       );
-      book.data = result;
-      const isCheckedOut = book.rows[0].checkedout;
 
-    if (isCheckedOut) {
-      return res.status(400).json({ message: 'Book is already checked out' });
-    }
+      if(result.length != 0)
+        return res.status(400).json({ message: 'Book is already checked out' });
+      //book.data = result;
+      //const isCheckedOut = result.rows[0].checkedout;
     } catch (error) {
       console.error("Error executing query", error.stack);
       res.status(500).send("Error executing query");
