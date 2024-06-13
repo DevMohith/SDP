@@ -6,6 +6,76 @@ const cors = require("cors"); // Import cors package
 const axios = require('axios');
 
 
+const nodemailer = require('nodemailer');
+
+// SMTP transporter configuration
+const transporter = nodemailer.createTransport({
+  host: 'smtp.sexycoders.org',
+  port: 465,
+  secure: true,
+  auth: {
+    user: 'sdp_noreply@byte-beam.io',
+    pass: '123'
+  }
+});
+
+// Function to get access token from Keycloak
+async function getAccessToken() {
+  const tokenUrl = `https://sso.sexycoders.org/auth/realms/SDP-SRH-2024/protocol/openid-connect/token`;
+  const tokenData = new URLSearchParams({
+    client_id: 'api',
+    client_secret: 'Auk7F58DblIBrqL8ZWcpU5RTwmkbEJK0', // Replace with your actual client secret
+    grant_type: 'client_credentials',
+  });
+
+  try {
+    const response = await axios.post(tokenUrl, tokenData.toString(), {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+    });
+    return response.data.access_token;
+  } catch (error) {
+    console.error('Error getting access token:', error.response ? error.response.data : error.message);
+    throw error;
+  }
+}
+
+
+async function getUserById(accessToken, userId) {
+  const userUrl = `https://sso.sexycoders.org/auth/admin/realms/SDP-SRH-2024/users/${userId}`;
+
+  try {
+    const response = await axios.get(userUrl, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error searching for user:', error.response ? error.response.data : error.message);
+    throw error;
+  }
+}
+
+// Function to send reminder email
+async function sendReminderEmail(userEmail, message) {
+  const mailOptions = {
+    from: 'sdp_noreply@byte-beam.io',
+    to: userEmail,
+    subject: 'Reminder: Please Return Me!',
+    text: message
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`Reminder email sent to ${userEmail}`);
+  } catch (error) {
+    console.error('Error sending email:', error.message);
+  }
+}
+
+
 
 app.options('*', cors());  // Enable preflight requests for all routes
 const $book = require("./Book.js");
@@ -107,6 +177,34 @@ async function queryDatabase(query, params) {
 // Root endpoint
 app.get("/", (req, res) => {
   res.send("Welcome to the Express app!");
+});
+
+
+app.post('/send-reminders', async (req, res) => {
+  const { reminders } = req.body;
+
+  try {
+    const accessToken = await getAccessToken();
+
+    for (const reminder of reminders) {
+      const { user_id, bibnum, title, author } = reminder;
+      const user = await getUserById(accessToken, user_id);
+      const userEmail = user.email;
+      const userName = user.lastName;
+      console.log(user);
+
+      if (userEmail) {
+        const message = `Dear ${userName},\n\nYou have an overdue book:\n\nTitle: ${title}\nAuthor: ${author}\nBibnum: ${bibnum}\n\nPlease return it as soon as possible.`;
+        await sendReminderEmail(userEmail, message);
+      } else {
+        console.warn(`No email found for user ID: ${user_id}`);
+      }
+    }
+
+    res.status(200).send('Reminder emails sent successfully');
+  } catch (error) {
+    res.status(500).send('Error processing reminders: ' + error.message);
+  }
 });
 
 /////Mohith's Workspace/////
@@ -415,12 +513,12 @@ app.post("/adminControl/calculateFine", async (req, res) => {
   }
 });
 
-app.post("/adminControl/getOverDue", async (req, res) => {
+app.get("/adminControl/getOverDue", async (req, res) => {
 
   try {
     // Query the database to retrieve borrowed books
     const result = await queryDatabase(
-      "SELECT * FROM CHECKOUTS_BY_TITLE WHERE checkout = TRUE AND checkintime < CURRENT_TIMESTAMP;"
+      "SELECT * FROM CHECKOUTS_BY_TITLE WHERE checkedout = TRUE AND checkintime < CURRENT_TIMESTAMP AND user_id IS NOT NULL;"
     );
     if (result.length === 0) {
       return res.status(404).json({

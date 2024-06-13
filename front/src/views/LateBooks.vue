@@ -8,16 +8,14 @@
     >
       <template v-slot:item="{ item }">
         <tr @click="viewBook(item)">
-          <td>{{ item.title }}</td>
-          <td>{{ item.author }}</td>
-          <td>{{ item.publisher }}</td>
-          <td>{{ item.publicationyear }}</td>
           <td>{{ item.bibnum }}</td>
-          <td>{{ item.isbn }}</td>
-          <td>{{ item.dueDate }}</td>
+          <td>{{new Date(item.checkintime).toLocaleString()}}</td>
+          <td>{{ item.user_id }}</td>
+          <td>{{ item.title }}</td>
         </tr>
       </template>
     </v-data-table>
+    <v-btn @click="sendReminders" color="primary">Send Reminders</v-btn>
   </v-container>
 </template>
 
@@ -28,13 +26,10 @@ export default {
   data() {
     return {
       headers: [
-        { text: 'Title', value: 'title' },
-        { text: 'Author', value: 'author' },
-        { text: 'Publisher', value: 'publisher' },
-        { text: 'Publication Year', value: 'publicationyear' },
-        { text: 'Bibnum', value: 'bibnum' },
-        { text: 'ISBN', value: 'isbn' },
-        { text: 'Due Date', value: 'dueDate' }
+        { title: 'Bibnum', value: 'bibnum' },
+        { title: 'Due Date', value: 'dueDate' },
+        { title: 'User', value: 'user_id' },
+        { title: 'Title', value: 'title' },
       ],
       lateBooks: []
     };
@@ -43,7 +38,7 @@ export default {
     async fetchLateBooks() {
       try {
         const response = await axios.get('http://localhost:3000/adminControl/getOverDue');
-        this.lateBooks = response.data.data;
+        this.lateBooks = response.data.borrowedBooks;
         console.log("Late books list updated");
       } catch (error) {
         console.error('Error fetching late books:', error);
@@ -51,6 +46,23 @@ export default {
     },
     viewBook(item) {
       this.$router.push(`/book/${item.bibnum}`);
+    },
+       async sendReminders() {
+      const reminders = this.lateBooks.map(book => ({
+        user_id: book.user_id,
+        bibnum: book.bibnum,
+        title: book.title,
+        author: book.author
+      }));
+
+      try {
+        await axios.post('http://localhost:3000/send-reminders', {
+          reminders
+        });
+        console.log('Reminder emails sent successfully');
+      } catch (error) {
+        console.error('Error sending reminders:', error);
+      }
     },
   },
   created() {

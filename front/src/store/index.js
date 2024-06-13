@@ -22,9 +22,9 @@ const store = createStore({
         state.books.splice(index, 1, updatedBook);
       }
     },
-    setSearchActive(state) {
+    setSearchActive(state, status) {
       console.log("search active");
-      state.isSearch = 1;
+      state.isSearch = status;
     },
     setUserInfo(state, userInfo) {
       state.userInfo = userInfo;

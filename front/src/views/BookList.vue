@@ -4,6 +4,7 @@
     <v-btn color="secondary" @click="resetSearch">{{ $store.state.isSearch === 1 ? 'Reset Search' : 'Refresh' }}</v-btn>
     <v-btn color="info" @click="goToBorrowedBooks">Borrowed Books</v-btn>
     <v-btn v-if="$store.state.userInfo.usergroup=='admin'" color="success" @click="goToCreateBook">Add Book</v-btn> <!-- New button added -->
+    <v-btn v-if="$store.state.userInfo.usergroup=='admin'" color="warning" @click="goToLateBooks">Late Books</v-btn> <!-- New button added -->
     <v-btn color="error" @click="logout">Logout</v-btn> <!-- Keycloak logout button -->
     <v-data-table
       :headers="headers"
@@ -58,6 +59,7 @@ export default {
     async resetSearch() {
       console.log("called");
       // Implement your reset search logic here
+        this.$store.commit('setSearchActive',0);
       await this.fetchBooks();
     },
     goToBorrowedBooks() {
@@ -68,6 +70,9 @@ export default {
     },
     goToCreateBook() {
       this.$router.push('/new-book'); // Method to redirect to create book page
+    },
+     goToLateBooks() {
+      this.$router.push('/late-books'); // Method to redirect to late books page
     },
     logout() {
       window.location.href = 'https://sso.sexycoders.org/auth/realms/SDP-SRH-2024/protocol/openid-connect/logout?redirect_uri=http://localhost:8080'

@@ -69,7 +69,7 @@ async function main() {
     const accessToken = await getAccessToken();
     console.log('Access token obtained:', accessToken);
     const userInfo = await searchUserById(accessToken);
-    console.log('User Info:', userInfo);
+    console.log('User Info:\n', userInfo);
   } catch (error) {
     console.error('An error occurred:', error.message);
   }
