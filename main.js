@@ -4,22 +4,6 @@ const app = express();
 const port = 3000;
 const cors = require("cors"); // Import cors package
 const axios = require('axios');
-//const session = require('express-session');
-//const { keycloak, memoryStore } = require('./keycloak');
-
-
-
-//app.use(session({
-  //secret: 'some secret',
-  //resave: false,
-  //saveUninitialized: true,
-  //store: memoryStore
-//}));
-
-//app.use(keycloak.middleware());
-
-//// Apply Keycloak protection to all routes
-//app.use(keycloak.protect());
 
 
 
@@ -152,15 +136,16 @@ app.get('/get_books', async (req, res) => {
 app.get("/get_books/:id", async (req, res) => { 
   const { id } = req.params;
   const bookId = parseInt(id, 10);
-  //const bookId
   if (isNaN(bookId)) {
     return res.status(400).json({ message: "Invalid book ID" });
   }
   var book = {};
   try {
-
     //query the database to get particular book
     const result = await queryDatabase(
+    //dear gagan you didn't defined the id's title in Database coloumn, so i am unable to get the particular book with id////
+    //we Didn't defined the id's title in Database coloumn, so i am unable to get the particular book with id////
+    //so i just tried with the bibnum=$1 by replacing id=$1///////
       "SELECT * FROM library_collection_inventory WHERE bibnum=$1",
       [bookId]
     );
@@ -180,27 +165,26 @@ app.get("/get_books/:id", async (req, res) => {
 //endpoint to add a new book for admin
 
 app.post("/adminControl/addBook", async (req, res) => {
-  const { bibnum, title, author, isbn, publicationyear, publisher, subjects, floatingitem, reportdate} =
+  const { bibnum, title, author, isbn, publicationyear, publisher, subjects, itemcollection, floatingitem, itemlocation, reportdate, itemcount} =
     req.body;  
-  console.log(req.body);
 if(req.user.usergroup=!'admin'){
   res.status(403).send("Forbidden.");}
 else{
   // validating input
-  if (!bibnum || !title || !author || !isbn || !publicationyear || !publisher || !subjects || !floatingitem || !reportdate) {
+  if (!bibnum || !title || !author || !isbn || !publicationyear || !publisher || !subjects || !itemcollection || !floatingitem || !itemlocation|| !reportdate || !itemcount) {
     return res
       .status(400)
       .json({
         message:
-          "All fields are required: bibnum, title, author, isbn, publicationyear, publisher, subjects, floatingitem, reportdate",
+          "All fields are required: bibnum, title, author, isbn, publicationyear, publisher, subjects, itemcollection, floatingitem, itemlocation, reportdate, itemcount",
       });
   }
   var book = {};
   try {
     //query the database to add new book
     const result = await queryDatabase(
-      "INSERT INTO library_collection_inventory (bibnum, title, author, isbn, publicationyear, publisher, subjects, floatingitem, reportdate) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",
-      [bibnum, title, author, isbn, publicationyear, publisher, subjects, floatingitem, reportdate,]
+      "INSERT INTO library_collection_inventory (bibnum, title, author, isbn, publicationyear, publisher, subjects, itemcollection, floatingitem, itemlocation, reportdate, itemcount) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *",
+      [bibnum, title, author, isbn, publicationyear, publisher, subjects, itemcollection, floatingitem, itemlocation, reportdate, itemcount]
     );
     book.data = result;
   } catch (error) {
@@ -393,7 +377,7 @@ app.post("/adminControl/getBorrowedBooks", async (req, res) => {
 });
 
 
-app.get("/adminControl/getOverDue", async (req, res) => {
+app.post("/adminControl/getFine", async (req, res) => {
 
   try {
     // Query the database to retrieve borrowed books
@@ -403,6 +387,44 @@ app.get("/adminControl/getOverDue", async (req, res) => {
     if (result.length === 0) {
       return res.status(404).json({
         message: "No Fines Due",
+      });
+    }
+    res.status(200).json({ borrowedBooks: result });
+  } catch (error) {
+    console.error("Error executing query", error.stack);
+    res.status(500).send("Error executing query");
+  }
+});
+
+app.post("/adminControl/calculateFine", async (req, res) => {
+
+  try {
+    // Query the database to retrieve borrowed books
+    const result = await queryDatabase(
+      "WITH fine_calculation AS (SELECT cbt.checkout_id, cbt.checkintime, (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP - cbt.checkintime) / 86400) * 0.5 AS fine, EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - cbt.checkintime)) / 86400 AS days, CURRENT_TIMESTAMP AS createtime, CURRENT_TIMESTAMP AS updatetime FROM checkouts_by_title cbt WHERE EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - cbt.checkintime)) / 86400 > 0) INSERT INTO overdue_fines (checkout_id, fine, days, createtime, updatetime) SELECT checkout_id, fine, days, createtime, updatetime FROM fine_calculation WHERE NOT EXISTS (SELECT 1 FROM overdue_fines of WHERE of.checkout_id = fine_calculation.checkout_id); UPDATE overdue_fines of SET fine = (EXTRACT(EPOCH FROM CURRENT_TIMESTAMP - cbt.checkintime) / 86400) * 0.5, days = EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - cbt.checkintime)) / 86400, updatetime = CURRENT_TIMESTAMP FROM checkouts_by_title cbt WHERE of.checkout_id = cbt.checkout_id AND EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - cbt.checkintime)) / 86400 > 0;"
+    );
+    if (result.length === 0) {
+      return res.status(404).json({
+        message: "No Fines Due",
+      });
+    }
+    res.status(200).json({ borrowedBooks: result });
+  } catch (error) {
+    console.error("Error executing query", error.stack);
+    res.status(500).send("Error executing query");
+  }
+});
+
+app.post("/adminControl/getOverDue", async (req, res) => {
+
+  try {
+    // Query the database to retrieve borrowed books
+    const result = await queryDatabase(
+      "SELECT * FROM CHECKOUTS_BY_TITLE WHERE checkout = TRUE AND checkintime < CURRENT_TIMESTAMP;"
+    );
+    if (result.length === 0) {
+      return res.status(404).json({
+        message: "No OverDue Books",
       });
     }
     res.status(200).json({ borrowedBooks: result });
@@ -432,10 +454,48 @@ app.get("/adminControl/getOverDue", async (req, res) => {
   //res.status(200).json(users);
 //});
 
+//endpoint to get user by ID
+//app.get('/adminControl/user/:id', async (req, res) => {
+  //const { id } = req.params;
+  //const userId = parseInt(id, 10);
+  //if (isNaN(userId)) {
+    //return res.status(400).json({ message: "Invalid user id" });
+  //}
+  //var user = {};
+
+  //try {
+    ////query the database to get user with id
+    //const result = await queryDatabase("SELECT id, username, is_admin, created_at FROM Users WHERE id=$1", [userId]);
+
+  //if (result.length === 0) {
+    //return res.status(404).json({message: "user not found"});
+  //}
+    //user.data = result;
+  //} catch (error) {
+    //console.error("Error executing query to get particular user", error.stack);
+    //res.status(500).send("Error executing query to get particular user");
+    //return;
+  //}
+
+  ////send back whatever is in 
+  //res.status(200).json(user);
+//});
 
 /************************************************************************************************************************************* */
 
-
+//try {
+//query the database to get all books
+//const result = await queryDatabase('UPDATE Books set title=$1 where id=$2', [title,id]);
+//t.data = result;
+//} catch (error) {
+// console.error('Error executing query', error.stack);
+// res.status(500).send('Error executing query');
+// return;
+//}
+//
+//
+//
+//
 
 ////Arnav Workspace////
 
@@ -495,7 +555,34 @@ app.post('/user/returnBook', async (req, res) => {
 
 
 
-//Arvind workspace
+//Arvind Workspace
+
+/*
+app.post("/user/extendBook", async (req, res) => {
+  const { book_id, user_id } = req.body;
+  if (!book_id || !user_id) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+  var book = {};
+  try {
+    const result = await queryDatabase(
+      "UPDATE BorrowedBooks SET extended=true WHERE book_id=$1 AND user_id=$2 RETURNING *",
+      [book_id, user_id]
+    );
+    book.data = result;
+  } catch (error) {
+    console.error("Error executing query", error.stack);
+    res.status(500).send("Error executing query");
+    return;
+  }
+  res.status(200).json(book);
+});
+*/
+
+
+
+//Arvind Workspace
+
 
 app.post("/user/extendBook", async (req, res) => {
 
