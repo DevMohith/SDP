@@ -1,7 +1,7 @@
 <template>
   <v-container>
     <v-btn color="primary" @click="goToAdvancedSearch">Advanced Search</v-btn>
-    <v-btn color="secondary" @click="resetSearch">Reset Search</v-btn>
+    <v-btn color="secondary" @click="resetSearch">{{ $store.state.isSearch === 1 ? 'Reset Search' : 'Refresh' }}</v-btn>
     <v-btn color="info" @click="goToBorrowedBooks">Borrowed Books</v-btn>
     <v-data-table
       :headers="headers"
