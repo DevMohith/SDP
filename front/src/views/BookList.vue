@@ -3,6 +3,8 @@
     <v-btn color="primary" @click="goToAdvancedSearch">Advanced Search</v-btn>
     <v-btn color="secondary" @click="resetSearch">{{ $store.state.isSearch === 1 ? 'Reset Search' : 'Refresh' }}</v-btn>
     <v-btn color="info" @click="goToBorrowedBooks">Borrowed Books</v-btn>
+    <v-btn v-if="$store.state.userInfo.usergroup=='admin'" color="success" @click="goToCreateBook">Add Book</v-btn> <!-- New button added -->
+    <v-btn color="error" @click="logout">Logout</v-btn> <!-- Keycloak logout button -->
     <v-data-table
       :headers="headers"
       :items="books"
@@ -16,6 +18,7 @@
           <td>{{ item.publisher }}</td>
           <td>{{ item.publicationyear }}</td>
           <td>{{ item.bibnum }}</td>
+          <td>{{ item.isbn }}</td>
         </tr>
       </template>
     </v-data-table>
@@ -33,7 +36,8 @@ export default {
         { title: 'Author', value: 'author' },
         { title: 'Publisher', value: 'publisherr' },
         { title: 'Publication Year', value: 'publicationyear' },
-        { title: 'bibnum', value: 'bibnum'} // Add the bibnum field and mark it as hidden
+        { title: 'bibnum', value: 'bibnum'}, 
+        { title: 'ISBN', value: 'isbn'}, 
       ],
       books: []
     };
@@ -61,7 +65,13 @@ export default {
     },
     viewBook(item) {
       this.$router.push(`/book/${item.bibnum}`);
-    }
+    },
+    goToCreateBook() {
+      this.$router.push('/new-book'); // Method to redirect to create book page
+    },
+    logout() {
+      window.location.href = 'https://sso.sexycoders.org/auth/realms/SDP-SRH-2024/protocol/openid-connect/logout?redirect_uri=http://localhost:8080'
+    },
   },
   created() {
     console.log(this.$store.state.isSearch);

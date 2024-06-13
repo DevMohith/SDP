@@ -5,6 +5,7 @@
       <v-text-field v-model="book.author" label="Author" :readonly="!$store.state.userInfo.usergroup=='admin'"></v-text-field>
       <v-text-field v-model="book.publisher" label="Publisher" :readonly="!$store.state.userInfo.usergroup=='admin'"></v-text-field>
       <v-text-field v-model="book.publicationyear" label="Published Date" :readonly="!$store.state.userInfo.usergroup=='admin'"></v-text-field>
+      <v-text-field v-model="book.isbn" label="ISBN" :readonly="!$store.state.userInfo.usergroup=='admin'"></v-text-field>
       <v-textarea v-model="book.subjects" label="Description" :readonly="!$store.state.userInfo.usergroup=='admin'"></v-textarea>
       <v-btn color="primary" @click="checkoutBook">Checkout Book</v-btn>
       <v-btn color="secondary" @click="cancel">Cancel</v-btn>

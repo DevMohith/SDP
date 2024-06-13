@@ -4,6 +4,22 @@ const app = express();
 const port = 3000;
 const cors = require("cors"); // Import cors package
 const axios = require('axios');
+//const session = require('express-session');
+//const { keycloak, memoryStore } = require('./keycloak');
+
+
+
+//app.use(session({
+  //secret: 'some secret',
+  //resave: false,
+  //saveUninitialized: true,
+  //store: memoryStore
+//}));
+
+//app.use(keycloak.middleware());
+
+//// Apply Keycloak protection to all routes
+//app.use(keycloak.protect());
 
 
 
@@ -166,6 +182,7 @@ app.get("/get_books/:id", async (req, res) => {
 app.post("/adminControl/addBook", async (req, res) => {
   const { bibnum, title, author, isbn, publicationyear, publisher, subjects, floatingitem, reportdate} =
     req.body;  
+  console.log(req.body);
 if(req.user.usergroup=!'admin'){
   res.status(403).send("Forbidden.");}
 else{
@@ -182,7 +199,7 @@ else{
   try {
     //query the database to add new book
     const result = await queryDatabase(
-      "INSERT INTO library_collection_inventory (bibnum, title, author, isbn, publicationyear, publisher, subjects, floatingitem, reportdate,) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",
+      "INSERT INTO library_collection_inventory (bibnum, title, author, isbn, publicationyear, publisher, subjects, floatingitem, reportdate) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",
       [bibnum, title, author, isbn, publicationyear, publisher, subjects, floatingitem, reportdate,]
     );
     book.data = result;
@@ -376,7 +393,7 @@ app.post("/adminControl/getBorrowedBooks", async (req, res) => {
 });
 
 
-app.post("/adminControl/getOverDue", async (req, res) => {
+app.get("/adminControl/getOverDue", async (req, res) => {
 
   try {
     // Query the database to retrieve borrowed books
